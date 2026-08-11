@@ -5,6 +5,7 @@ import { Container, Section } from "@/components/shared/container";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PriceTag } from "@/components/shared/price-tag";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { CourseRow } from "@/types/db";
 
@@ -47,11 +48,9 @@ export default async function CoursesPage() {
                     <CardDescription className="line-clamp-3">{course.description}</CardDescription>
                   </CardHeader>
                 </div>
-                <CardContent className="flex items-center justify-between">
-                  <span className="font-heading text-lg font-semibold">
-                    ₹{Number(course.price).toLocaleString("en-IN")}
-                  </span>
-                  <Button asChild variant="outline" size="sm">
+                <CardContent className="flex flex-col gap-3">
+                  <PriceTag price={Number(course.price)} />
+                  <Button asChild variant="outline" size="sm" className="w-fit">
                     <Link href={`/courses/${course.slug}`}>
                       View track <ArrowRight className="size-4" />
                     </Link>

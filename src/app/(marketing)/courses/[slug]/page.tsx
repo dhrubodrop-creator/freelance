@@ -1,9 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowRight, CheckCircle2, Lock } from "lucide-react";
 
 import { Container, Section } from "@/components/shared/container";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,7 +55,7 @@ export default async function CourseDetailPage({ params }: Props) {
   return (
     <div>
       <Section className="bg-primary bg-mesh-hero bg-noise pb-14 text-primary-foreground">
-        <Container className="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-start">
+        <Container className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div className="flex flex-col gap-5">
             {course.track && (
               <Badge variant="accent" className="w-fit capitalize">
@@ -65,24 +66,23 @@ export default async function CourseDetailPage({ params }: Props) {
             <p className="max-w-xl text-body-lg text-white/75">{course.description}</p>
           </div>
 
-          <Card className="border-white/10 bg-white text-card-foreground shadow-lifted">
-            <CardHeader>
-              <CardTitle className="text-base text-muted-foreground">Course price</CardTitle>
-              <p className="font-heading text-h2 font-bold">
-                ₹{Number(course.price).toLocaleString("en-IN")}
-              </p>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              <Button asChild size="lg" variant="accent" className="w-full">
-                <Link href={`/checkout/${course.slug}`}>
-                  Enroll now <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-              <p className="text-center text-micro text-muted-foreground">
-                One-time payment. Lifetime access to this track.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="cinematic-frame relative overflow-hidden rounded-2xl border border-white/15 bg-primary shadow-lifted">
+            <div className="relative aspect-[4/3]">
+              <Image src="/images/ropes/course-builder.webp" alt="An Indian professional learning AI automation through a hands-on project" fill priority sizes="(max-width: 1023px) 100vw, 48vw" className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
+            </div>
+            <Card className="absolute inset-x-4 bottom-4 border-white/15 bg-white/95 text-card-foreground shadow-lifted sm:inset-x-6 sm:bottom-6">
+              <CardContent className="flex items-center justify-between gap-4 py-4">
+                <div>
+                  <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">One-time course fee</p>
+                  <p className="font-heading text-h3 font-bold">₹{Number(course.price).toLocaleString("en-IN")}</p>
+                </div>
+                <Button asChild size="lg" variant="accent">
+                  <Link href={`/checkout/${course.slug}`}>Enroll now <ArrowRight className="size-4" /></Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </Container>
       </Section>
 
@@ -91,7 +91,10 @@ export default async function CourseDetailPage({ params }: Props) {
           <div>
             <h2 className="mb-5 font-heading text-h3 font-bold">What&rsquo;s inside this track</h2>
             {modules.length === 0 ? (
-              <p className="text-muted-foreground">Module details are being finalized for this track.</p>
+              <div className="rounded-xl border border-dashed border-border bg-muted/30 p-6">
+                <p className="font-heading font-semibold">The curriculum is being prepared for the next cohort.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Enrollment details will show the complete module map before payment.</p>
+              </div>
             ) : (
               <ul className="flex flex-col gap-3">
                 {modules.map((module, i) => (
@@ -128,15 +131,19 @@ export default async function CourseDetailPage({ params }: Props) {
       </Section>
 
       <Section className="bg-muted/40">
-        <Container>
-          <div className="mb-8 max-w-2xl">
+        <Container className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
+          <div className="max-w-2xl">
             <h2 className="font-heading text-h3 font-bold">Earnings potential</h2>
             <p className="mt-2 text-muted-foreground">
               A simple illustration of how freelancers commonly structure retainer pricing once they&rsquo;re
               taking on client work.
             </p>
+            <div className="mt-6 relative aspect-[16/10] overflow-hidden rounded-2xl shadow-card">
+              <Image src="/images/ropes/proof-workbench.webp" alt="Client system notes beside an automation workflow and payment confirmation" fill sizes="(max-width: 1023px) 100vw, 42vw" className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/55 to-transparent" />
+            </div>
           </div>
-          <Card className="max-w-xl">
+          <Card>
             <CardContent>
               <Table>
                 <TableHeader>

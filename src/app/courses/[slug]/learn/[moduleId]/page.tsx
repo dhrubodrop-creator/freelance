@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
-import { FileText, FolderDown } from "lucide-react";
+import Image from "next/image";
+import { FileText, FolderDown, PlayCircle } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/current-user";
 import {
@@ -91,8 +92,16 @@ export default async function ModulePage({
             />
           </div>
         ) : (
-          <div className="flex aspect-video w-full items-center justify-center rounded-xl bg-muted text-sm text-muted-foreground">
-            Video coming soon
+          <div className="relative flex aspect-video w-full items-end overflow-hidden rounded-xl bg-primary shadow-card">
+            <Image src="/images/ropes/course-builder.webp" alt="An AI automation learning workspace" fill sizes="(max-width: 1023px) 100vw, 70vw" className="object-cover opacity-55" />
+            <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/30 to-transparent" />
+            <div className="relative z-10 flex max-w-lg items-start gap-3 p-6 text-white sm:p-8">
+              <PlayCircle className="mt-0.5 size-6 shrink-0 text-accent" />
+              <div>
+                <p className="font-heading font-semibold">Module workspace</p>
+                <p className="mt-1 text-sm text-white/70">The recorded walkthrough is being prepared. Your module resources and AI mentor remain available here.</p>
+              </div>
+            </div>
           </div>
         )}
 

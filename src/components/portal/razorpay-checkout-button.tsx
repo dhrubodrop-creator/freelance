@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, Tag } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 declare global {
   interface Window {
@@ -24,10 +25,28 @@ export function RazorpayCheckoutButton({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [scriptReady, setScriptReady] = useState(false);
+  const [promoOpen, setPromoOpen] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
 
   async function handlePay() {
     setLoading(true);
+    const code = promoCode.trim();
+
     try {
+      if (code) {
+        const freeRes = await fetch("/api/enroll/free", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ courseSlug, promoCode: code }),
+        });
+        if (freeRes.ok) {
+          toast.success("Promo code applied — you're enrolled.");
+          router.push(`/courses/${courseSlug}/learn`);
+          return;
+        }
+        // Not the free-enrollment code — fall through to normal checkout.
+      }
+
       const orderRes = await fetch("/api/payments/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -66,13 +85,35 @@ export function RazorpayCheckoutButton({
       razorpay.open();
     } catch {
       toast.error("Something went wrong starting checkout. Try again.");
+    } finally {
       setLoading(false);
     }
   }
 
   return (
-    <>
+    <div className="flex flex-col gap-3">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" onReady={() => setScriptReady(true)} />
+
+      {promoOpen ? (
+        <div className="flex gap-2">
+          <Input
+            value={promoCode}
+            onChange={(e) => setPromoCode(e.target.value)}
+            placeholder="Promo code"
+            className="uppercase"
+          />
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setPromoOpen(true)}
+          className="flex w-fit items-center gap-1.5 text-micro text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+        >
+          <Tag className="size-3.5" />
+          Have a promo code?
+        </button>
+      )}
+
       <Button
         size="lg"
         variant="accent"
@@ -81,8 +122,8 @@ export function RazorpayCheckoutButton({
         disabled={loading || !scriptReady}
       >
         {loading ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
-        Pay securely with Razorpay
+        {promoCode.trim() ? "Apply & continue" : "Pay securely with Razorpay"}
       </Button>
-    </>
+    </div>
   );
 }

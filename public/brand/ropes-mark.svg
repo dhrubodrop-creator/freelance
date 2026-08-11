@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Ropes brand mark</title>
+  <desc id="desc">A rounded gold emblem containing a continuous rope-shaped letter R.</desc>
+  <rect width="64" height="64" rx="18" fill="#F59E0B"/>
+  <g fill="none" stroke="#14213D" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 50V19.5A7.5 7.5 0 0 1 25.5 12H33a10 10 0 0 1 0 20H18" stroke-width="6.4"/>
+    <path d="m30 32 14 18" stroke-width="6.4"/>
+    <path d="M22.4 20.4h14.2M22.4 26h14.2" stroke-width="1.8" opacity=".42"/>
+  </g>
+</svg>

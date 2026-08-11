@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { ShieldCheck, Lock, BadgeCheck } from "lucide-react";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
@@ -17,11 +18,18 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
   const typedCourse = course as CourseRow;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/30 px-6 py-16">
-      <div className="mb-8">
-        <Logo />
+    <div className="relative flex min-h-screen items-center overflow-hidden bg-muted/30 px-6 py-16">
+      <div className="absolute inset-y-0 left-0 hidden w-1/2 bg-primary lg:block">
+        <Image src="/images/ropes/proof-workbench.webp" alt="A client-ready AI automation workspace" fill priority sizes="50vw" className="object-cover opacity-70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/35 to-primary" />
+        <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-primary/40" />
       </div>
-      <Container className="max-w-md p-0">
+      <Container className="relative grid max-w-5xl gap-10 p-0 lg:grid-cols-2 lg:items-center">
+        <div className="hidden max-w-md flex-col gap-5 text-white lg:flex">
+          <Logo dark />
+          <h1 className="font-heading text-h2 font-bold">A secure step into your next skill.</h1>
+          <p className="text-white/70">One-time enrollment, lifetime course access, and a checkout handled by India&rsquo;s trusted payment infrastructure.</p>
+        </div>
         <Card>
           <CardHeader>
             <CardTitle className="text-h4">Confirm your enrollment</CardTitle>
@@ -39,6 +47,14 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
             </div>
 
             <RazorpayCheckoutButton courseSlug={typedCourse.slug} courseTitle={typedCourse.title} />
+
+            <div className="flex items-center justify-center gap-3 rounded-lg border border-border bg-primary-50 px-4 py-3 text-primary-700">
+              <ShieldCheck className="size-5" />
+              <div className="leading-tight">
+                <p className="font-heading text-sm font-bold">Secured by Razorpay</p>
+                <p className="text-micro text-muted-foreground">PCI DSS compliant payment processing</p>
+              </div>
+            </div>
 
             <div className="flex flex-col gap-2 border-t border-border pt-4 text-micro text-muted-foreground">
               <span className="flex items-center gap-1.5">

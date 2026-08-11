@@ -2,6 +2,24 @@
 
 Ambiguous or judgment calls made while building Ropes, and why.
 
+## Cinematic visual system
+
+The marketing journey uses four original AI-generated editorial images under `public/images/ropes/`,
+created with OpenAI's built-in image generation tool and converted locally to WebP. The prompt set
+specified authentic contemporary Indian home-work settings, practical AI automation workflows,
+deep-navy blue-hour light, warm rope-gold practical light, natural skin/material texture, and no
+logos, readable UI, watermarks, luxury fantasy, or generic Western stock-office cues. The assets are:
+
+- `hero-independent.webp`: an Indian professional on a client call while building an automation.
+- `course-builder.webp`: an Indian professional learning through a hands-on workflow project.
+- `webinar-live.webp`: an Indian instructor leading a live workflow demonstration.
+- `proof-workbench.webp`: a non-identifying editorial still life of client notes, chai, automation,
+  and a payment signal, used when a real student portrait is unavailable so no stock person is
+  presented as an actual testimonial.
+
+The images use `next/image`, responsive `sizes`, and small WebP sources (about 60–95 KB each). Motion
+is CSS-only, non-blocking, and inherits the global `prefers-reduced-motion` shutdown rule.
+
 ## Real end-to-end verification pass
 
 Beyond `npm run build`, this was verified against a **real** local Postgres (via Postgres.app)

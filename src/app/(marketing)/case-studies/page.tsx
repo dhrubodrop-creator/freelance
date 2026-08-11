@@ -16,28 +16,47 @@ export default async function CaseStudiesPage() {
   const caseStudies = (data ?? []) as CaseStudyRow[];
 
   return (
-    <Section>
-      <Container>
-        <div className="mb-12 max-w-2xl">
-          <h1 className="font-heading text-h1 font-bold">Case studies</h1>
-          <p className="mt-3 text-body-lg text-muted-foreground">
-            Stories from students on what it&rsquo;s like to move from a day job into independent client work.
-          </p>
+    <div>
+      <Section className="relative overflow-hidden bg-primary bg-mesh-hero bg-noise text-primary-foreground">
+        <div className="absolute inset-y-0 right-0 w-full opacity-40 sm:w-3/5">
+          <Image src="/images/ropes/proof-workbench.webp" alt="" fill priority sizes="(max-width: 639px) 100vw, 60vw" className="object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/70 to-primary/20" />
         </div>
+        <Container className="relative py-8">
+          <span className="inline-flex items-center gap-2 text-micro font-semibold uppercase tracking-wide text-accent"><Sparkles className="size-3.5" /> Proof, with context</span>
+          <h1 className="mt-4 max-w-2xl font-heading text-h1 font-bold">The work behind independence</h1>
+          <p className="mt-3 max-w-xl text-body-lg text-white/75">Honest stories about learning the tools, building the first system, and turning professional experience into client value.</p>
+        </Container>
+      </Section>
 
+      <Section>
+        <Container>
         {caseStudies.length === 0 ? (
-          <p className="text-muted-foreground">Case studies will appear here soon.</p>
+          <Card className="mx-auto max-w-2xl overflow-hidden py-0">
+            <div className="relative h-64">
+              <Image src="/images/ropes/proof-workbench.webp" alt="A real-world AI automation workbench" fill sizes="100vw" className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
+            </div>
+            <CardContent className="flex flex-col gap-3 py-6 text-center">
+              <h2 className="font-heading text-h4 font-semibold">First cohort stories are being documented.</h2>
+              <p className="text-sm text-muted-foreground">We publish named outcomes only with student permission. No invented testimonials, no stock-photo stand-ins.</p>
+            </CardContent>
+          </Card>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2">
             {caseStudies.map((study) => (
               <Card key={study.id} className="overflow-hidden py-0">
                 {study.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={study.image_url} alt={study.title} className="h-48 w-full object-cover" />
+                  <div className="relative h-56"><Image src={study.image_url} alt={study.title} fill unoptimized sizes="(max-width: 639px) 100vw, 50vw" className="object-cover" /></div>
                 ) : (
-                  <div className="h-48 w-full bg-mesh-hero bg-primary bg-noise" aria-hidden="true" />
+                  <div className="relative h-56">
+                    <Image src="/images/ropes/proof-workbench.webp" alt="Editorial illustration of hands-on AI automation work" fill sizes="(max-width: 639px) 100vw, 50vw" className="object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/75 to-transparent" />
+                    <span className="absolute bottom-3 left-3 rounded-full border border-white/20 bg-primary/75 px-3 py-1 text-micro font-medium text-white backdrop-blur-sm">Visual illustration · not a student portrait</span>
+                  </div>
                 )}
                 <CardContent className="flex flex-col gap-2 py-5">
+                  <Quote className="size-5 text-accent-600" />
                   <h2 className="font-heading text-lg font-semibold">{study.title}</h2>
                   <p className="text-sm text-muted-foreground">{study.summary}</p>
                 </CardContent>
@@ -45,7 +64,10 @@ export default async function CaseStudiesPage() {
             ))}
           </div>
         )}
-      </Container>
-    </Section>
+        </Container>
+      </Section>
+    </div>
   );
 }
+import Image from "next/image";
+import { Quote, Sparkles } from "lucide-react";

@@ -125,6 +125,21 @@
     pointer-events: none;
     opacity: 0.5;
   }
+
+  .cinematic-frame {
+    transform: perspective(1200px) rotateY(-1.5deg) rotateX(0.75deg);
+    box-shadow: 0 32px 80px -28px hsl(var(--ink-950) / 0.75);
+  }
+
+  .cinematic-image {
+    animation: cinematic-drift 14s ease-in-out infinite alternate;
+  }
+
+}
+
+@keyframes cinematic-drift {
+  from { transform: scale(1.01) translate3d(-0.3%, 0, 0); }
+  to { transform: scale(1.055) translate3d(0.5%, -0.5%, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {

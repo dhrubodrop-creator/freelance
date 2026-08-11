@@ -4,9 +4,11 @@ import { z } from "zod";
 
 import { razorpay } from "@/lib/razorpay";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { getDiscountedPrice } from "@/lib/pricing";
+import { isMasterPromoCode } from "@/lib/promo";
 import type { CourseRow } from "@/types/db";
 
-const bodySchema = z.object({ courseSlug: z.string().min(1) });
+const bodySchema = z.object({ courseSlug: z.string().min(1), promoCode: z.string().optional() });
 
 export async function POST(req: Request) {
   const { userId } = await auth();
@@ -14,6 +16,10 @@ export async function POST(req: Request) {
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+
+  if (isMasterPromoCode(parsed.data.promoCode)) {
+    return NextResponse.json({ error: "Use the free-enrollment endpoint for this code" }, { status: 400 });
+  }
 
   const supabase = supabaseAdmin();
   const { data: course } = await supabase
@@ -25,7 +31,8 @@ export async function POST(req: Request) {
   if (!course) return NextResponse.json({ error: "Course not found" }, { status: 404 });
 
   const typedCourse = course as CourseRow;
-  const amountPaise = Math.round(Number(typedCourse.price) * 100);
+  // Price is always computed server-side from the standing discount — never trust a client-sent amount.
+  const amountPaise = Math.round(getDiscountedPrice(Number(typedCourse.price)) * 100);
 
   const order = await razorpay.orders.create({
     amount: amountPaise,

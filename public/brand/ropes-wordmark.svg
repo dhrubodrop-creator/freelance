@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 310 80" role="img" aria-labelledby="title desc">
+  <title id="title">Ropes</title>
+  <desc id="desc">The Ropes wordmark with a gold continuous-rope R emblem.</desc>
+  <rect x="8" y="8" width="64" height="64" rx="18" fill="#F59E0B"/>
+  <g fill="none" stroke="#14213D" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M26 58V27.5a7.5 7.5 0 0 1 7.5-7.5H41a10 10 0 0 1 0 20H26" stroke-width="6.4"/>
+    <path d="m38 40 14 18" stroke-width="6.4"/>
+    <path d="M30.4 28.4h14.2M30.4 34h14.2" stroke-width="1.8" opacity=".42"/>
+  </g>
+  <text x="88" y="56" fill="#111827" font-family="Sora, Inter, system-ui, sans-serif" font-size="48" font-weight="700" letter-spacing="-2">Ropes<tspan fill="#F59E0B">.</tspan></text>
+</svg>
