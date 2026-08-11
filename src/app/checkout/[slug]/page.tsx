@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { Container } from "@/components/shared/container";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Logo } from "@/components/shared/logo";
+import { PriceTag } from "@/components/shared/price-tag";
 import { RazorpayCheckoutButton } from "@/components/portal/razorpay-checkout-button";
 import type { CourseRow } from "@/types/db";
 
@@ -41,9 +42,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
                 <p className="font-medium">{typedCourse.title}</p>
                 <p className="text-sm text-muted-foreground">Lifetime access · 1:1 sessions included</p>
               </div>
-              <p className="font-heading text-lg font-semibold">
-                ₹{Number(typedCourse.price).toLocaleString("en-IN")}
-              </p>
+              <PriceTag price={Number(typedCourse.price)} />
             </div>
 
             <RazorpayCheckoutButton courseSlug={typedCourse.slug} courseTitle={typedCourse.title} />

@@ -6,6 +6,7 @@ import { Container, Section } from "@/components/shared/container";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PriceTag } from "@/components/shared/price-tag";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { CaseStudyRow, CourseRow } from "@/types/db";
 
@@ -169,11 +170,9 @@ export default async function HomePage() {
                       <CardDescription className="line-clamp-3">{course.description}</CardDescription>
                     </CardHeader>
                   </div>
-                  <CardContent className="flex items-center justify-between pb-6">
-                    <span className="font-heading text-lg font-semibold">
-                      ₹{Number(course.price).toLocaleString("en-IN")}
-                    </span>
-                    <Button asChild variant="outline" size="sm">
+                  <CardContent className="flex flex-col gap-3 pb-6">
+                    <PriceTag price={Number(course.price)} />
+                    <Button asChild variant="outline" size="sm" className="w-fit">
                       <Link href={`/courses/${course.slug}`}>
                         View track <ArrowRight className="size-4" />
                       </Link>

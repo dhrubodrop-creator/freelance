@@ -7,6 +7,7 @@ import { Container, Section } from "@/components/shared/container";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PriceTag } from "@/components/shared/price-tag";
 import {
   Table,
   TableBody,
@@ -75,7 +76,7 @@ export default async function CourseDetailPage({ params }: Props) {
               <CardContent className="flex items-center justify-between gap-4 py-4">
                 <div>
                   <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">One-time course fee</p>
-                  <p className="font-heading text-h3 font-bold">₹{Number(course.price).toLocaleString("en-IN")}</p>
+                  <PriceTag price={Number(course.price)} size="lg" />
                 </div>
                 <Button asChild size="lg" variant="accent">
                   <Link href={`/checkout/${course.slug}`}>Enroll now <ArrowRight className="size-4" /></Link>
