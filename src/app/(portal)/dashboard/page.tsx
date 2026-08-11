@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RegenerateRecommendationButton } from "@/components/portal/regenerate-recommendation-button";
+import { PriceTag } from "@/components/shared/price-tag";
 import type { CourseRow, EnrollmentRow, RecommendationRow } from "@/types/db";
 
 type RecommendationWithCourse = RecommendationRow & { course: CourseRow | null };
@@ -68,7 +69,7 @@ export default async function DashboardPage() {
                 View this track <ArrowRight className="size-4" />
               </Link>
             </Button>
-            <span className="text-sm text-muted-foreground">₹{Number(recommendedCourse.price).toLocaleString("en-IN")}</span>
+            <PriceTag price={Number(recommendedCourse.price)} />
           </CardContent>
         </Card>
       )}
@@ -124,9 +125,9 @@ export default async function DashboardPage() {
                 <CardTitle className="text-base">{course.title}</CardTitle>
                 <CardDescription className="line-clamp-2">{course.description}</CardDescription>
               </CardHeader>
-              <CardContent className="flex items-center justify-between">
-                <span className="text-sm font-medium">₹{Number(course.price).toLocaleString("en-IN")}</span>
-                <Button asChild variant="outline" size="sm">
+              <CardContent className="flex flex-col gap-3">
+                <PriceTag price={Number(course.price)} />
+                <Button asChild variant="outline" size="sm" className="w-fit">
                   <Link href={`/courses/${course.slug}`}>Details</Link>
                 </Button>
               </CardContent>
