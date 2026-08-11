@@ -2,6 +2,39 @@
 
 Ambiguous or judgment calls made while building Ropes, and why.
 
+## Real end-to-end verification pass
+
+Beyond `npm run build`, this was verified against a **real** local Postgres (via Postgres.app)
+running the actual migration files, fronted by a real PostgREST instance (a faithful stand-in for
+Supabase's REST layer) and exercised through the real `@supabase/supabase-js` client — plus a real
+browser (Clerk temporarily stubbed client-side only, since no real Clerk instance is available in
+this environment) rendering the actual pages at both desktop and 375px mobile width, including a
+real form submission that landed a row in the real `leads` table. This found and fixed three real
+bugs that `npm run build` could never catch:
+
+1. **Migration bootstrap order** (`0001_init.sql`): `current_user_id()`/`is_admin()` referenced
+   `public.users` before that table existed. Postgres validates `language sql` function bodies
+   against the catalog at `CREATE FUNCTION` time (unlike `plpgsql`, which defers), so the migration
+   failed outright on a real database. Fixed by moving those two functions after the `users` table.
+2. **Hero/heading text overflow at 375px**: `text-display`/`text-h1`/etc. were fixed-px sizes with
+   no responsive scale-down, so "Go independent." ran off the right edge of a real mobile viewport.
+   Fixed by converting the whole display/heading scale in `tailwind.config.ts` to fluid `clamp()`
+   values.
+3. **Silently invisible hero sections** (5 pages: home closing CTA, webinar, course detail, case
+   studies, onboarding loading state): `cn()` → `twMerge()` was dropping `bg-primary` and
+   `bg-mesh-hero`, leaving only `bg-noise`, because stock `tailwind-merge` doesn't know this
+   project's custom theme and buckets *any* `bg-<word>` it doesn't recognize into one generic
+   "background color" conflict group — keeping only the last of the three and rendering white text
+   on a white background. Fixed by switching `cn()` to `extendTailwindMerge()` with this project's
+   custom color tokens and background-image utilities registered as their own class groups
+   (`src/lib/utils.ts`).
+
+What this pass did **not** cover: the signed-in flows (onboarding → recommendation → checkout →
+course portal → mentor chat → admin) need a real Clerk instance to exercise — `auth()` correctly
+throws without real `clerkMiddleware()` context, which is itself a good sign (it fails loud, not
+open), but it means those flows are verified by code review and type-checking, not a live click-
+through, in this environment specifically.
+
 ## Stack & tooling
 
 - **Next.js 14, not 16.** `create-next-app@latest` scaffolds Next 16 with Tailwind v4 by default. The SRS asks for "Next.js 14+" and a `tailwind.config.ts`-driven token system, and Next 14 + Tailwind v3 is the best-supported combination for Clerk (`@clerk/nextjs`) and the broader shadcn/ui ecosystem today. Repinned to Next 14 and classic Tailwind v3.

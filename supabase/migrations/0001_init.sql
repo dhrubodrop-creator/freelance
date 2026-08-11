@@ -20,6 +20,22 @@ as $$
   select nullif(current_setting('request.jwt.claims', true)::json ->> 'sub', '')
 $$;
 
+-- ── Tables ──────────────────────────────────────────────────────────────
+-- (public.users must exist before current_user_id()/is_admin() below, since
+-- Postgres validates the body of `language sql` functions against the
+-- catalog at CREATE FUNCTION time — unlike plpgsql, it isn't fully deferred.)
+
+create table public.users (
+  id uuid primary key default gen_random_uuid(),
+  clerk_id text not null unique,
+  name text,
+  email text,
+  phone text,
+  role text not null default 'student' check (role in ('student', 'admin')),
+  profile_completed boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
 create or replace function public.current_user_id()
 returns uuid
 language sql
@@ -42,19 +58,6 @@ as $$
     where clerk_id = public.current_clerk_id() and role = 'admin'
   )
 $$;
-
--- ── Tables ──────────────────────────────────────────────────────────────
-
-create table public.users (
-  id uuid primary key default gen_random_uuid(),
-  clerk_id text not null unique,
-  name text,
-  email text,
-  phone text,
-  role text not null default 'student' check (role in ('student', 'admin')),
-  profile_completed boolean not null default false,
-  created_at timestamptz not null default now()
-);
 
 create table public.profiles (
   id uuid primary key default gen_random_uuid(),

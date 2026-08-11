@@ -86,12 +86,14 @@ const config: Config = {
         base: ["1rem", { lineHeight: "1.65" }],
         lg: ["1.125rem", { lineHeight: "1.6" }],
         "body-lg": ["1.1875rem", { lineHeight: "1.6" }],
-        h4: ["1.375rem", { lineHeight: "1.35", letterSpacing: "-0.01em" }],
-        h3: ["1.75rem", { lineHeight: "1.25", letterSpacing: "-0.015em" }],
-        h2: ["2.25rem", { lineHeight: "1.15", letterSpacing: "-0.02em" }],
-        h1: ["3rem", { lineHeight: "1.08", letterSpacing: "-0.025em" }],
-        display: ["3.75rem", { lineHeight: "1.03", letterSpacing: "-0.03em" }],
-        "display-lg": ["4.75rem", { lineHeight: "1.0", letterSpacing: "-0.035em" }],
+        // Fluid via clamp() so headings scale down on narrow viewports instead
+        // of overflowing (fixed-px sizes here broke hero text at 375px).
+        h4: ["clamp(1.125rem, 1rem + 0.5vw, 1.375rem)", { lineHeight: "1.35", letterSpacing: "-0.01em" }],
+        h3: ["clamp(1.375rem, 1.15rem + 1vw, 1.75rem)", { lineHeight: "1.25", letterSpacing: "-0.015em" }],
+        h2: ["clamp(1.625rem, 1.3rem + 1.5vw, 2.25rem)", { lineHeight: "1.15", letterSpacing: "-0.02em" }],
+        h1: ["clamp(2rem, 1.5rem + 2.2vw, 3rem)", { lineHeight: "1.1", letterSpacing: "-0.025em" }],
+        display: ["clamp(2.25rem, 1.6rem + 2.8vw, 3.75rem)", { lineHeight: "1.06", letterSpacing: "-0.03em" }],
+        "display-lg": ["clamp(2.5rem, 1.7rem + 3.5vw, 4.75rem)", { lineHeight: "1.03", letterSpacing: "-0.035em" }],
       },
       spacing: {
         "4.5": "1.125rem",
