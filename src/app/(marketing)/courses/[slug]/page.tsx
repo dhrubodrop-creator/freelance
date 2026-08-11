@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { getDiscountedPrice } from "@/lib/pricing";
 import type { CourseRow, ModuleRow } from "@/types/db";
 
 export const revalidate = 3600;
@@ -32,10 +33,25 @@ type Props = { params: { slug: string } };
 
 export async function generateMetadata({ params }: Props) {
   const supabase = supabaseAdmin();
-  const { data } = await supabase.from("courses").select("title, description").eq("slug", params.slug).maybeSingle();
-  const course = data as Pick<CourseRow, "title" | "description"> | null;
+  const { data } = await supabase
+    .from("courses")
+    .select("title, description, track")
+    .eq("slug", params.slug)
+    .maybeSingle();
+  const course = data as Pick<CourseRow, "title" | "description" | "track"> | null;
   if (!course) return { title: "Course" };
-  return { title: course.title, description: course.description ?? undefined };
+
+  const title = `${course.title} — AI Course for Freelancers & Solo Entrepreneurs`;
+  const description = course.description
+    ? `${course.description} A Ropes AI course for freelancers and solo entrepreneurs — AI-mentored, project-based, client-ready.`
+    : undefined;
+
+  return {
+    title,
+    description,
+    openGraph: { title, description },
+    twitter: { title, description },
+  };
 }
 
 export default async function CourseDetailPage({ params }: Props) {
@@ -52,9 +68,36 @@ export default async function CourseDetailPage({ params }: Props) {
     .eq("course_id", course.id)
     .order("order_index", { ascending: true });
   const modules = (moduleData ?? []) as ModuleRow[];
+  const discountedPrice = getDiscountedPrice(Number(course.price));
+
+  const courseJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: course.title,
+    description: course.description ?? undefined,
+    provider: { "@type": "EducationalOrganization", name: "Ropes", sameAs: process.env.NEXT_PUBLIC_SITE_URL },
+    audience: { "@type": "Audience", audienceType: "Freelancers, solo entrepreneurs, working professionals" },
+    offers: {
+      "@type": "Offer",
+      price: discountedPrice,
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+      category: "Paid",
+    },
+    hasCourseInstance: {
+      "@type": "CourseInstance",
+      courseMode: "online",
+      courseWorkload: `P${modules.length}W`,
+    },
+  };
 
   return (
     <div>
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }}
+      />
       <Section className="bg-primary bg-mesh-hero bg-noise pb-14 text-primary-foreground">
         <Container className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div className="flex flex-col gap-5">

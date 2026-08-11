@@ -12,8 +12,9 @@ import type { CourseRow } from "@/types/db";
 export const revalidate = 3600;
 
 export const metadata = {
-  title: "Courses",
-  description: "Browse the Ropes course tracks — guided paths from working professional to independent AI no-code freelancer.",
+  title: "AI Courses for Freelancers & Solo Entrepreneurs",
+  description:
+    "Browse Ropes' AI course tracks — agentic AI, LangChain, n8n automation, MLOps, cloud AI, and more — guided paths from working professional to independent AI freelancer or solo entrepreneur.",
 };
 
 export default async function CoursesPage() {
