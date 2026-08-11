@@ -134,6 +134,15 @@ export interface ContentChunkRow {
   created_at: string;
 }
 
+export interface MentorMessageRow {
+  id: string;
+  user_id: string;
+  course_id: string | null;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -160,6 +169,7 @@ export interface Database {
       };
       announcements: { Row: AnnouncementRow; Insert: Partial<AnnouncementRow>; Update: Partial<AnnouncementRow> };
       content_chunks: { Row: ContentChunkRow; Insert: Partial<ContentChunkRow>; Update: Partial<ContentChunkRow> };
+      mentor_messages: { Row: MentorMessageRow; Insert: Partial<MentorMessageRow>; Update: Partial<MentorMessageRow> };
     };
   };
 }

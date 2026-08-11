@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, Sparkles, GraduationCap } from "lucide-react";
+import { ArrowRight, Sparkles, GraduationCap, Radio } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/current-user";
 import { supabaseAdmin } from "@/lib/supabase/server";
@@ -38,6 +38,10 @@ export default async function DashboardPage() {
   const recommendedCourse = recommendation?.course ?? null;
   const enrolledCourseIds = new Set((enrollments ?? []).map((e) => e.course_id));
 
+  const { data: latestAnnouncement } = enrolledCourseIds.size
+    ? await supabase.from("announcements").select("*").order("created_at", { ascending: false }).limit(1).maybeSingle()
+    : { data: null };
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -65,6 +69,18 @@ export default async function DashboardPage() {
               </Link>
             </Button>
             <span className="text-sm text-muted-foreground">₹{Number(recommendedCourse.price).toLocaleString("en-IN")}</span>
+          </CardContent>
+        </Card>
+      )}
+
+      {latestAnnouncement && (
+        <Card className="border-primary-100 bg-primary-50/40">
+          <CardContent className="flex items-start gap-3 py-5">
+            <Radio className="mt-0.5 size-4 shrink-0 text-primary-700" />
+            <div>
+              <p className="font-heading text-sm font-semibold text-primary-700">{latestAnnouncement.title}</p>
+              <p className="text-sm text-muted-foreground">{latestAnnouncement.body}</p>
+            </div>
           </CardContent>
         </Card>
       )}
