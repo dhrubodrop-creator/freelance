@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { FileText, FolderDown, CheckCircle2, Hammer, Target, ExternalLink } from "lucide-react";
+import { FileText, FolderDown, CheckCircle2, Hammer, Target } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/current-user";
 import {
@@ -81,23 +81,14 @@ export default async function ModulePage({
         </div>
 
         {embedUrl && (
-          <div className="flex flex-col gap-2">
-            <div className="aspect-video w-full overflow-hidden rounded-xl bg-ink-950 shadow-card">
-              <iframe
-                src={embedUrl}
-                title={activeModule.title}
-                className="size-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-            {activeModule.video_source_label && (
-              <p className="flex items-center gap-1.5 text-micro text-muted-foreground">
-                <ExternalLink className="size-3 shrink-0" />
-                Curated video: {activeModule.video_source_label} — external, freely available. The
-                breakdown below is written by Ropes.
-              </p>
-            )}
+          <div className="aspect-video w-full overflow-hidden rounded-xl bg-ink-950 shadow-card">
+            <iframe
+              src={embedUrl}
+              title={activeModule.title}
+              className="size-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           </div>
         )}
 
