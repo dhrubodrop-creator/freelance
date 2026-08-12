@@ -31,7 +31,7 @@ export function PriceTag({
       <span className="text-sm text-muted-foreground line-through">{formatINR(price)}</span>
       <Badge variant="accent" className="gap-1 font-semibold">
         <BadgePercent className="size-3" />
-        Special discount · {percent}% off
+        {size === "lg" ? `Special discount · ${percent}% off` : `${percent}% off`}
       </Badge>
     </div>
   );
