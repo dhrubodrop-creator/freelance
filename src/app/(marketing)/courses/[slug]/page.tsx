@@ -9,26 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PriceTag } from "@/components/shared/price-tag";
 import { getCourseVisual } from "@/components/marketing/course-visual";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { getDiscountedPrice } from "@/lib/pricing";
+import { getEarningsIllustration } from "@/components/marketing/earnings-illustration";
+import { EarningsChart } from "@/components/marketing/earnings-chart";
 import type { CourseRow, ModuleRow } from "@/types/db";
 
 export const revalidate = 3600;
-
-const EXAMPLE_RETAINERS = [
-  { size: "₹15,000 / month", clients: "1 client" },
-  { size: "₹15,000 / month", clients: "3 clients" },
-  { size: "₹25,000 / month", clients: "3 clients" },
-];
 
 type Props = { params: { slug: string } };
 
@@ -179,23 +166,7 @@ export default async function CourseDetailPage({ params }: Props) {
           </div>
           <Card>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Example retainer size</TableHead>
-                    <TableHead>Clients</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {EXAMPLE_RETAINERS.map((row) => (
-                    <TableRow key={`${row.size}-${row.clients}`}>
-                      <TableCell>{row.size}</TableCell>
-                      <TableCell>{row.clients}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-                <TableCaption>Illustrative example — your results will vary.</TableCaption>
-              </Table>
+              <EarningsChart illustration={getEarningsIllustration(course.track)} />
             </CardContent>
           </Card>
         </Container>
