@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { FileText, FolderDown, CheckCircle2, Hammer, Target } from "lucide-react";
+import { FileText, FolderDown, CheckCircle2, Hammer, Target, Sparkles } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/current-user";
 import {
@@ -14,8 +14,20 @@ import { toYouTubeEmbedUrl } from "@/lib/youtube";
 import { ModuleSidebar } from "@/components/course/module-sidebar";
 import { MarkCompleteButton } from "@/components/course/mark-complete-button";
 import { MentorChatWidget } from "@/components/portal/mentor-chat-widget";
+import { PlaybookTab } from "@/components/course/playbook-tab";
+import { ExercisesTab } from "@/components/course/exercises-tab";
+import { InterviewPrepTab } from "@/components/course/interview-prep-tab";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { PlaybookRow, TemplateRow } from "@/types/db";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import type {
+  ExerciseRow,
+  ModulePlaybookSectionRow,
+  InterviewQuestionRow,
+  PlaybookRow,
+  SkillRow,
+  TemplateRow,
+} from "@/types/db";
 
 export default async function ModulePage({
   params,
@@ -46,16 +58,152 @@ export default async function ModulePage({
   const embedUrl = toYouTubeEmbedUrl(activeModule.video_url);
 
   const supabase = supabaseAdmin();
-  const [{ data: templateData }, { data: playbookData }] = await Promise.all([
+  const [
+    { data: templateData },
+    { data: playbookData },
+    { data: playbookSectionsData },
+    { data: exercisesData },
+    { data: interviewQuestionsData },
+    { data: moduleSkillLinks },
+  ] = await Promise.all([
     supabase.from("templates").select("*").eq("module_id", activeModule.id),
     supabase.from("playbooks").select("*").eq("course_id", course.id),
+    supabase.from("module_playbook_sections").select("*").eq("module_id", activeModule.id).order("order_index"),
+    supabase.from("exercises").select("*").eq("module_id", activeModule.id).order("order_index"),
+    supabase.from("interview_questions").select("*").eq("module_id", activeModule.id).order("order_index"),
+    supabase.from("module_skills").select("skill_id, skills(*)").eq("module_id", activeModule.id),
   ]);
   const templates = (templateData ?? []) as TemplateRow[];
   const playbooks = (playbookData ?? []) as PlaybookRow[];
+  const playbookSections = (playbookSectionsData ?? []) as ModulePlaybookSectionRow[];
+  const exercises = (exercisesData ?? []) as ExerciseRow[];
+  const interviewQuestions = (interviewQuestionsData ?? []) as InterviewQuestionRow[];
+  const skillsGained = ((moduleSkillLinks ?? []) as unknown as { skills: SkillRow | null }[])
+    .map((l) => l.skills)
+    .filter((s): s is SkillRow => Boolean(s));
+
+  const hasDeepContent = playbookSections.length > 0 || exercises.length > 0 || interviewQuestions.length > 0;
 
   const unlockedIds = new Set(modules.filter((_, i) => isModuleUnlocked(modules, i, progress)).map((m) => m.id));
   const completedIds = new Set(
     Array.from(progress.values()).filter((p) => p.completed_at).map((p) => p.module_id)
+  );
+
+  const overviewContent = (
+    <div className="flex flex-col gap-6">
+      {embedUrl && (
+        <div className="aspect-video w-full overflow-hidden rounded-xl bg-ink-950 shadow-card">
+          <iframe
+            src={embedUrl}
+            title={activeModule.title}
+            className="size-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      )}
+
+      {activeModule.topics.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">What this module covers</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {activeModule.topics.map((topic) => (
+              <div key={topic} className="flex items-start gap-2.5 text-sm">
+                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
+                <span>{topic}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {(activeModule.build_deliverable || activeModule.outcome) && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {activeModule.build_deliverable && (
+            <Card className="border-accent/30 bg-accent-50/40">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Hammer className="size-4 text-accent-600" />
+                  Build / deliverable
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">{activeModule.build_deliverable}</CardContent>
+            </Card>
+          )}
+          {activeModule.outcome && (
+            <Card className="border-primary-100 bg-primary-50/40">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Target className="size-4 text-primary-700" />
+                  Outcome
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">{activeModule.outcome}</CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {skillsGained.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Sparkles className="size-4 text-accent-600" />
+              Skills this module builds
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {skillsGained.map((skill) => (
+              <Badge key={skill.id} variant="outline">
+                {skill.name}
+              </Badge>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      <div>
+        <MarkCompleteButton
+          moduleId={activeModule.id}
+          nextHref={nextModule ? `/courses/${slug}/learn/${nextModule.id}` : null}
+          completed={isCompleted}
+        />
+      </div>
+
+      {(templates.length > 0 || playbooks.length > 0) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Resources for this module</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            {templates.map((t) => (
+              <a
+                key={t.id}
+                href={`/api/downloads/template/${t.id}`}
+                className="flex items-center gap-2.5 rounded-lg border border-border px-3.5 py-2.5 text-sm transition-colors hover:bg-muted"
+              >
+                <FolderDown className="size-4 text-accent-600" />
+                {t.title}
+                <span className="ml-auto text-micro text-muted-foreground">n8n template</span>
+              </a>
+            ))}
+            {playbooks.map((p) => (
+              <a
+                key={p.id}
+                href={`/api/downloads/playbook/${p.id}`}
+                className="flex items-center gap-2.5 rounded-lg border border-border px-3.5 py-2.5 text-sm transition-colors hover:bg-muted"
+              >
+                <FileText className="size-4 text-accent-600" />
+                {p.title}
+                <span className="ml-auto text-micro text-muted-foreground">PDF playbook</span>
+              </a>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 
   return (
@@ -80,101 +228,33 @@ export default async function ModulePage({
           <h1 className="font-heading text-h3 font-semibold">{activeModule.title}</h1>
         </div>
 
-        {embedUrl && (
-          <div className="aspect-video w-full overflow-hidden rounded-xl bg-ink-950 shadow-card">
-            <iframe
-              src={embedUrl}
-              title={activeModule.title}
-              className="size-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-        )}
-
-        {activeModule.topics.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">What this module covers</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {activeModule.topics.map((topic) => (
-                <div key={topic} className="flex items-start gap-2.5 text-sm">
-                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
-                  <span>{topic}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
-
-        {(activeModule.build_deliverable || activeModule.outcome) && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {activeModule.build_deliverable && (
-              <Card className="border-accent/30 bg-accent-50/40">
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <Hammer className="size-4 text-accent-600" />
-                    Build / deliverable
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
-                  {activeModule.build_deliverable}
-                </CardContent>
-              </Card>
+        {hasDeepContent ? (
+          <Tabs defaultValue="overview">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              {playbookSections.length > 0 && <TabsTrigger value="playbook">Playbook</TabsTrigger>}
+              {exercises.length > 0 && <TabsTrigger value="practice">Practice</TabsTrigger>}
+              {interviewQuestions.length > 0 && <TabsTrigger value="interview">Interview Prep</TabsTrigger>}
+            </TabsList>
+            <TabsContent value="overview">{overviewContent}</TabsContent>
+            {playbookSections.length > 0 && (
+              <TabsContent value="playbook">
+                <PlaybookTab sections={playbookSections} />
+              </TabsContent>
             )}
-            {activeModule.outcome && (
-              <Card className="border-primary-100 bg-primary-50/40">
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <Target className="size-4 text-primary-700" />
-                    Outcome
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">{activeModule.outcome}</CardContent>
-              </Card>
+            {exercises.length > 0 && (
+              <TabsContent value="practice">
+                <ExercisesTab exercises={exercises} />
+              </TabsContent>
             )}
-          </div>
-        )}
-
-        <div>
-          <MarkCompleteButton
-            moduleId={activeModule.id}
-            nextHref={nextModule ? `/courses/${slug}/learn/${nextModule.id}` : null}
-            completed={isCompleted}
-          />
-        </div>
-
-        {(templates.length > 0 || playbooks.length > 0) && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Resources for this module</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2">
-              {templates.map((t) => (
-                <a
-                  key={t.id}
-                  href={`/api/downloads/template/${t.id}`}
-                  className="flex items-center gap-2.5 rounded-lg border border-border px-3.5 py-2.5 text-sm transition-colors hover:bg-muted"
-                >
-                  <FolderDown className="size-4 text-accent-600" />
-                  {t.title}
-                  <span className="ml-auto text-micro text-muted-foreground">n8n template</span>
-                </a>
-              ))}
-              {playbooks.map((p) => (
-                <a
-                  key={p.id}
-                  href={`/api/downloads/playbook/${p.id}`}
-                  className="flex items-center gap-2.5 rounded-lg border border-border px-3.5 py-2.5 text-sm transition-colors hover:bg-muted"
-                >
-                  <FileText className="size-4 text-accent-600" />
-                  {p.title}
-                  <span className="ml-auto text-micro text-muted-foreground">PDF playbook</span>
-                </a>
-              ))}
-            </CardContent>
-          </Card>
+            {interviewQuestions.length > 0 && (
+              <TabsContent value="interview">
+                <InterviewPrepTab questions={interviewQuestions} />
+              </TabsContent>
+            )}
+          </Tabs>
+        ) : (
+          overviewContent
         )}
       </div>
 

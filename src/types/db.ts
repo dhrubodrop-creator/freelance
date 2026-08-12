@@ -196,6 +196,71 @@ export interface NotificationRow {
   created_at: string;
 }
 
+export type PlaybookSectionType =
+  | "the_field"
+  | "mental_models"
+  | "decision_framework"
+  | "workflow"
+  | "failure_modes"
+  | "debugging_playbook"
+  | "checklist"
+  | "template"
+  | "resources";
+
+export interface ModulePlaybookSectionRow {
+  id: string;
+  module_id: string;
+  section_type: PlaybookSectionType;
+  title: string;
+  content: string;
+  order_index: number;
+  version: number;
+  updated_at: string;
+  created_at: string;
+}
+
+export type ExerciseLevel = "guided" | "semi_guided" | "independent" | "capstone";
+
+export interface ExerciseRow {
+  id: string;
+  module_id: string;
+  level: ExerciseLevel;
+  title: string;
+  problem_statement: string;
+  starter_context: string | null;
+  hints: string[];
+  solution_notes: string | null;
+  order_index: number;
+  created_at: string;
+}
+
+export type InterviewQuestionCategory =
+  | "fundamentals"
+  | "applied"
+  | "scenario"
+  | "debugging"
+  | "system_design"
+  | "project_defence"
+  | "behavioural";
+
+export interface InterviewQuestionRow {
+  id: string;
+  module_id: string;
+  category: InterviewQuestionCategory;
+  question: string;
+  what_is_tested: string;
+  strong_answer_structure: string;
+  weak_answer_example: string | null;
+  follow_up_question: string | null;
+  order_index: number;
+  created_at: string;
+}
+
+export interface ModuleSkillRow {
+  module_id: string;
+  skill_id: string;
+}
+
 export interface EducationRow {
   id: string;
   user_id: string;
@@ -414,6 +479,18 @@ export interface Database {
         Update: Partial<AdminAuditLogRow>;
       };
       notifications: { Row: NotificationRow; Insert: Partial<NotificationRow>; Update: Partial<NotificationRow> };
+      module_playbook_sections: {
+        Row: ModulePlaybookSectionRow;
+        Insert: Partial<ModulePlaybookSectionRow>;
+        Update: Partial<ModulePlaybookSectionRow>;
+      };
+      exercises: { Row: ExerciseRow; Insert: Partial<ExerciseRow>; Update: Partial<ExerciseRow> };
+      interview_questions: {
+        Row: InterviewQuestionRow;
+        Insert: Partial<InterviewQuestionRow>;
+        Update: Partial<InterviewQuestionRow>;
+      };
+      module_skills: { Row: ModuleSkillRow; Insert: Partial<ModuleSkillRow>; Update: Partial<ModuleSkillRow> };
     };
   };
 }
