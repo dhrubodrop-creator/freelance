@@ -18,7 +18,7 @@ const MODULE_FIELDS: EntityField[] = [
 export function ModulesTable({ courseId, modules }: { courseId: string; modules: ModuleRow[] }) {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Button asChild variant="ghost" size="sm">
           <Link href="/admin/courses">
             <ArrowLeft className="size-4" /> Back to courses

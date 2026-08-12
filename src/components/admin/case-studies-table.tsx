@@ -17,7 +17,7 @@ const CASE_STUDY_FIELDS: EntityField[] = [
 export function CaseStudiesTable({ caseStudies }: { caseStudies: CaseStudyRow[] }) {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-heading text-h3 font-semibold">Case studies</h2>
           <p className="text-sm text-muted-foreground">{caseStudies.length} total</p>
