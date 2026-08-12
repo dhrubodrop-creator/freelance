@@ -15,6 +15,8 @@ export interface UserRow {
   created_at: string;
 }
 
+export type WorkPreference = "full_time" | "contract" | "freelance" | "consulting" | "remote_only";
+
 export interface ProfileRow {
   id: string;
   user_id: string;
@@ -24,6 +26,39 @@ export interface ProfileRow {
   career_goal: CareerGoal | null;
   hours_per_week: number | null;
   cv_file_url: string | null;
+  created_at: string;
+  location: string | null;
+  bio: string | null;
+  preferred_language: string | null;
+  income_goal_inr: number | null;
+  work_preference: WorkPreference | null;
+  linkedin_url: string | null;
+  portfolio_url: string | null;
+  github_url: string | null;
+  website_url: string | null;
+}
+
+export interface WorkExperienceRow {
+  id: string;
+  user_id: string;
+  company: string;
+  role: string;
+  start_date: string | null;
+  end_date: string | null;
+  description: string | null;
+  achievements: string[];
+  skills_used: string[];
+  created_at: string;
+}
+
+export interface EducationRow {
+  id: string;
+  user_id: string;
+  institution: string;
+  degree: string | null;
+  field: string | null;
+  start_date: string | null;
+  end_date: string | null;
   created_at: string;
 }
 
@@ -174,6 +209,12 @@ export interface Database {
       announcements: { Row: AnnouncementRow; Insert: Partial<AnnouncementRow>; Update: Partial<AnnouncementRow> };
       content_chunks: { Row: ContentChunkRow; Insert: Partial<ContentChunkRow>; Update: Partial<ContentChunkRow> };
       mentor_messages: { Row: MentorMessageRow; Insert: Partial<MentorMessageRow>; Update: Partial<MentorMessageRow> };
+      work_experiences: {
+        Row: WorkExperienceRow;
+        Insert: Partial<WorkExperienceRow>;
+        Update: Partial<WorkExperienceRow>;
+      };
+      education: { Row: EducationRow; Insert: Partial<EducationRow>; Update: Partial<EducationRow> };
     };
   };
 }

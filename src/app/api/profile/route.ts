@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
   const { occupation, yearsExperience, industry, careerGoal, hoursPerWeek } = parsed.data;
 
-  await supabase.from("profiles").upsert(
+  const { error: profileUpsertError } = await supabase.from("profiles").upsert(
     {
       user_id: user.id,
       occupation,
@@ -65,10 +65,17 @@ export async function POST(req: Request) {
       industry,
       career_goal: careerGoal,
       hours_per_week: hoursPerWeek,
-      cv_file_url: cvFileUrl,
+      // Only touch cv_file_url when a new file was actually uploaded this
+      // submission — otherwise a resubmit without a new CV would wipe out
+      // one already on file (e.g. uploaded later via the profile page).
+      ...(cvFileUrl ? { cv_file_url: cvFileUrl } : {}),
     },
     { onConflict: "user_id" }
   );
+  if (profileUpsertError) {
+    console.error("[api/profile] profile upsert failed:", profileUpsertError.message);
+    return NextResponse.json({ error: "Could not save your profile — try again." }, { status: 500 });
+  }
 
   await supabase.from("users").update({ profile_completed: true }).eq("id", user.id);
 
@@ -87,4 +94,55 @@ export async function POST(req: Request) {
   });
 
   return NextResponse.json({ recommendation });
+}
+
+const profileUpdateSchema = z.object({
+  bio: z.string().max(2000).optional().nullable(),
+  location: z.string().max(200).optional().nullable(),
+  preferredLanguage: z.string().max(100).optional().nullable(),
+  incomeGoalInr: z.coerce.number().min(0).max(100_000_000).optional().nullable(),
+  workPreference: z
+    .enum(["full_time", "contract", "freelance", "consulting", "remote_only"])
+    .optional()
+    .nullable(),
+  linkedinUrl: z.string().url().max(500).optional().nullable().or(z.literal("")),
+  portfolioUrl: z.string().url().max(500).optional().nullable().or(z.literal("")),
+  githubUrl: z.string().url().max(500).optional().nullable().or(z.literal("")),
+  websiteUrl: z.string().url().max(500).optional().nullable().or(z.literal("")),
+});
+
+/** Ongoing profile edits (Phase 1) — separate from the one-time onboarding POST above. */
+export async function PATCH(req: Request) {
+  const { userId } = await auth();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await req.json().catch(() => null);
+  const parsed = profileUpdateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
+  }
+
+  const supabase = supabaseAdmin();
+  const { data: user } = await supabase.from("users").select("id").eq("clerk_id", userId).maybeSingle();
+  if (!user) return NextResponse.json({ error: "User record not found — try refreshing." }, { status: 404 });
+
+  const v = parsed.data;
+  const { error } = await supabase.from("profiles").upsert(
+    {
+      user_id: user.id,
+      bio: v.bio ?? null,
+      location: v.location ?? null,
+      preferred_language: v.preferredLanguage ?? null,
+      income_goal_inr: v.incomeGoalInr ?? null,
+      work_preference: v.workPreference ?? null,
+      linkedin_url: v.linkedinUrl || null,
+      portfolio_url: v.portfolioUrl || null,
+      github_url: v.githubUrl || null,
+      website_url: v.websiteUrl || null,
+    },
+    { onConflict: "user_id" }
+  );
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
 }
