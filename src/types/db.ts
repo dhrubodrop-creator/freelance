@@ -120,6 +120,53 @@ export interface MonetisationActionRow {
   created_at: string;
 }
 
+export type SignalDirection = "rising" | "declining" | "stable";
+export type SignalConfidence = "verified" | "estimated";
+
+export interface MarketSignalRow {
+  id: string;
+  category_id: string;
+  signal: string;
+  direction: SignalDirection;
+  source: string;
+  source_url: string | null;
+  confidence: SignalConfidence;
+  region: string;
+  observed_at: string;
+  created_at: string;
+}
+
+export type OpportunityType = "job" | "freelance" | "consulting" | "training" | "partnership" | "business_lead";
+export type OpportunitySource = "curated" | "partner_feed" | "external_api";
+
+export interface OpportunityRow {
+  id: string;
+  title: string;
+  type: OpportunityType;
+  description: string | null;
+  category_id: string | null;
+  source: OpportunitySource;
+  source_url: string | null;
+  location: string | null;
+  is_remote: boolean;
+  compensation_range: string | null;
+  posted_at: string;
+  created_at: string;
+}
+
+export interface OpportunitySkillRow {
+  opportunity_id: string;
+  skill_id: string;
+}
+
+export interface OpportunityMatchRow {
+  id: string;
+  user_id: string;
+  opportunity_id: string;
+  match_score: number;
+  computed_at: string;
+}
+
 export interface EducationRow {
   id: string;
   user_id: string;
@@ -310,6 +357,22 @@ export interface Database {
         Row: MonetisationActionRow;
         Insert: Partial<MonetisationActionRow>;
         Update: Partial<MonetisationActionRow>;
+      };
+      market_signals: {
+        Row: MarketSignalRow;
+        Insert: Partial<MarketSignalRow>;
+        Update: Partial<MarketSignalRow>;
+      };
+      opportunities: { Row: OpportunityRow; Insert: Partial<OpportunityRow>; Update: Partial<OpportunityRow> };
+      opportunity_skills: {
+        Row: OpportunitySkillRow;
+        Insert: Partial<OpportunitySkillRow>;
+        Update: Partial<OpportunitySkillRow>;
+      };
+      opportunity_matches: {
+        Row: OpportunityMatchRow;
+        Insert: Partial<OpportunityMatchRow>;
+        Update: Partial<OpportunityMatchRow>;
       };
     };
   };
