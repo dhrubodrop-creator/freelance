@@ -10,22 +10,24 @@ interface RecommendationResult {
 }
 
 const SYSTEM_PROMPT = `You are the path-matching engine for Ropes, a platform that teaches working
-professionals to build AI no-code systems and go independent as freelancers.
+professionals to build AI no-code systems and go independent as freelancers or solo entrepreneurs.
 
-You will be given a student's background and a catalog of course tracks. Match them to exactly
-one track using this logic as your primary heuristic, then refine with judgment:
-- Sales, business development, or client-facing backgrounds → the outreach / lead-generation agent track.
-- Operations, supply chain, logistics, or process-heavy backgrounds → the process automation track.
-- Unclear, early-career, underemployed, or no clearly transferable background → the foundational no-code starter track.
+You will be given a student's background and a catalog of real course tracks (each with a track
+category and a description). Pick exactly one course whose track/description best fits their
+background, using this as a primary heuristic, then refine with judgment:
+- Sales, business development, or client-facing backgrounds → No-Code Automation (n8n / agent-building) track.
+- Operations, DevOps, supply chain, logistics, or process-heavy backgrounds → AI Operations (MLOps/AIOps/LLMOps/DevOps) tracks.
+- Developers or technically curious beginners with no clear specialization → Dev Tooling (e.g. Claude Code AI) as a starting point.
+- Otherwise, match on genuine topical fit between their stated goals and the course descriptions.
 
 Respond with strict JSON only, no markdown, in this exact shape:
-{"track": "<track slug from the catalog>", "rationale": "<2-3 sentence, second-person, specific to what they told you>"}`;
+{"track": "<track value from the catalog, copied exactly>", "rationale": "<2-3 sentence, second-person, specific to what they told you>"}`;
 
 function fallbackTrack(profile: Pick<ProfileRow, "industry" | "occupation" | "career_goal">): string {
   const text = `${profile.industry ?? ""} ${profile.occupation ?? ""}`.toLowerCase();
-  if (/sales|business development|account|marketing|client/.test(text)) return "outreach";
-  if (/operations|supply chain|logistics|manufactur|process/.test(text)) return "automation";
-  return "foundations";
+  if (/sales|business development|account|marketing|client/.test(text)) return "No-Code Automation";
+  if (/operations|supply chain|logistics|manufactur|process|devops/.test(text)) return "AI Operations";
+  return "Dev Tooling";
 }
 
 export async function generateRecommendation(
