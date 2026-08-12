@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { logEvent } from "@/lib/analytics";
 
 const addSkillSchema = z.object({
   skillId: z.string().uuid(),
@@ -34,6 +35,8 @@ export async function POST(req: Request) {
     { onConflict: "user_id,skill_id" }
   );
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await logEvent(user.id, "skill_added", { skillId: parsed.data.skillId, selfLevel: parsed.data.selfLevel });
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

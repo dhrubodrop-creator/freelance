@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Logo } from "@/components/shared/logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { NotificationBell } from "@/components/portal/notification-bell";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -78,7 +79,8 @@ export function PortalShell({
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-border p-2.5">
           <UserButton afterSignOutUrl="/" />
-          <span className="text-sm text-muted-foreground">Account</span>
+          <span className="flex-1 text-sm text-muted-foreground">Account</span>
+          <NotificationBell />
         </div>
       </aside>
 
@@ -86,6 +88,7 @@ export function PortalShell({
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/90 px-5 backdrop-blur-md md:hidden">
           <Logo />
           <div className="flex items-center gap-2">
+            <NotificationBell />
             <UserButton afterSignOutUrl="/" />
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>

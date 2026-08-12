@@ -167,6 +167,35 @@ export interface OpportunityMatchRow {
   computed_at: string;
 }
 
+export interface AnalyticsEventRow {
+  id: string;
+  user_id: string | null;
+  event_name: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface AdminAuditLogRow {
+  id: string;
+  actor_user_id: string | null;
+  action: string;
+  target_type: string;
+  target_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface NotificationRow {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  link: string | null;
+  read: boolean;
+  created_at: string;
+}
+
 export interface EducationRow {
   id: string;
   user_id: string;
@@ -374,6 +403,17 @@ export interface Database {
         Insert: Partial<OpportunityMatchRow>;
         Update: Partial<OpportunityMatchRow>;
       };
+      analytics_events: {
+        Row: AnalyticsEventRow;
+        Insert: Partial<AnalyticsEventRow>;
+        Update: Partial<AnalyticsEventRow>;
+      };
+      admin_audit_logs: {
+        Row: AdminAuditLogRow;
+        Insert: Partial<AdminAuditLogRow>;
+        Update: Partial<AdminAuditLogRow>;
+      };
+      notifications: { Row: NotificationRow; Insert: Partial<NotificationRow>; Update: Partial<NotificationRow> };
     };
   };
 }

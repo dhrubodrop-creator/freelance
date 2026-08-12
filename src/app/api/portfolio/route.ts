@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { logEvent } from "@/lib/analytics";
 
 const portfolioSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
@@ -44,6 +45,8 @@ export async function POST(req: Request) {
       .insert(skill_ids.map((skill_id) => ({ portfolio_item_id: item.id, skill_id })));
     if (linkError) return NextResponse.json({ error: linkError.message }, { status: 500 });
   }
+
+  await logEvent(user.id, "project_created", { portfolioItemId: item.id });
 
   return NextResponse.json({ ok: true, id: item.id }, { status: 201 });
 }

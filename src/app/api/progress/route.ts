@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { logEvent } from "@/lib/analytics";
 
 const bodySchema = z.object({ moduleId: z.string().uuid() });
 
@@ -39,6 +40,22 @@ export async function POST(req: Request) {
       { user_id: user.id, module_id: parsed.data.moduleId, completed_at: new Date().toISOString() },
       { onConflict: "user_id,module_id" }
     );
+
+  await logEvent(user.id, "lesson_completed", { moduleId: parsed.data.moduleId, courseId: module.course_id });
+
+  const { count: totalModules } = await supabase
+    .from("modules")
+    .select("*", { count: "exact", head: true })
+    .eq("course_id", module.course_id);
+  const { count: completedModules } = await supabase
+    .from("progress")
+    .select("*, modules!inner(course_id)", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("modules.course_id", module.course_id)
+    .not("completed_at", "is", null);
+  if (totalModules && completedModules && completedModules >= totalModules) {
+    await logEvent(user.id, "course_completed", { courseId: module.course_id });
+  }
 
   return NextResponse.json({ success: true });
 }

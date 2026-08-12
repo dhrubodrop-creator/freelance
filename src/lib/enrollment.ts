@@ -2,6 +2,8 @@ import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { resend, FROM_EMAIL } from "@/lib/resend";
+import { logEvent } from "@/lib/analytics";
+import { createNotification } from "@/lib/notifications";
 import type { CourseRow, UserRow } from "@/types/db";
 
 /**
@@ -41,6 +43,17 @@ export async function activateEnrollment(params: { userId: string; courseId: str
 
   const typedUser = user as UserRow | null;
   const typedCourse = course as CourseRow | null;
+
+  await logEvent(params.userId, "payment_completed", { courseId: params.courseId, paymentId: params.paymentId });
+  if (typedCourse) {
+    await createNotification(
+      params.userId,
+      "enrollment",
+      `You're in — ${typedCourse.title}`,
+      "Your course access is live.",
+      `/courses/${typedCourse.slug}/learn`
+    );
+  }
 
   if (typedUser?.email && typedCourse) {
     try {

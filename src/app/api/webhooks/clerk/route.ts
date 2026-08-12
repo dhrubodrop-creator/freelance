@@ -4,6 +4,7 @@ import { Webhook } from "svix";
 import type { WebhookEvent } from "@clerk/nextjs/server";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { logEvent } from "@/lib/analytics";
 
 export async function POST(req: Request) {
   const secret = process.env.CLERK_WEBHOOK_SECRET;
@@ -46,15 +47,23 @@ export async function POST(req: Request) {
     )?.phone_number;
     const name = [user.first_name, user.last_name].filter(Boolean).join(" ") || null;
 
-    await supabase.from("users").upsert(
-      {
-        clerk_id: user.id,
-        name,
-        email: primaryEmail ?? null,
-        phone: primaryPhone ?? null,
-      },
-      { onConflict: "clerk_id" }
-    );
+    const { data: syncedUser } = await supabase
+      .from("users")
+      .upsert(
+        {
+          clerk_id: user.id,
+          name,
+          email: primaryEmail ?? null,
+          phone: primaryPhone ?? null,
+        },
+        { onConflict: "clerk_id" }
+      )
+      .select("id")
+      .single();
+
+    if (event.type === "user.created" && syncedUser) {
+      await logEvent(syncedUser.id, "signup", { source: "clerk_webhook" });
+    }
   }
 
   if (event.type === "user.deleted" && event.data.id) {

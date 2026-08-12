@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireAdminUser } from "@/lib/current-user";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { logAdminAction } from "@/lib/audit-log";
 
 const courseSchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
@@ -17,8 +18,9 @@ const courseSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  let admin;
   try {
-    await requireAdminUser();
+    admin = await requireAdminUser();
   } catch (err) {
     const message = err instanceof Error ? err.message : "Forbidden";
     return NextResponse.json({ error: message }, { status: message === "Not authenticated" ? 401 : 403 });
@@ -30,8 +32,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
   }
 
-  const { error } = await supabaseAdmin().from("courses").insert(parsed.data);
+  const { data, error } = await supabaseAdmin().from("courses").insert(parsed.data).select("id").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await logAdminAction(admin.id, "create", "course", data.id, { title: parsed.data.title, slug: parsed.data.slug });
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

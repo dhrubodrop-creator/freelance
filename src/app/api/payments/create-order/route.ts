@@ -6,6 +6,7 @@ import { razorpay } from "@/lib/razorpay";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { getDiscountedPrice } from "@/lib/pricing";
 import { isMasterPromoCode } from "@/lib/promo";
+import { logEvent } from "@/lib/analytics";
 import type { CourseRow } from "@/types/db";
 
 const bodySchema = z.object({ courseSlug: z.string().min(1), promoCode: z.string().optional() });
@@ -40,6 +41,9 @@ export async function POST(req: Request) {
     receipt: `${typedCourse.slug}-${userId}-${Date.now()}`,
     notes: { courseId: typedCourse.id, courseSlug: typedCourse.slug, clerkUserId: userId },
   });
+
+  const { data: internalUser } = await supabase.from("users").select("id").eq("clerk_id", userId).maybeSingle();
+  if (internalUser) await logEvent(internalUser.id, "checkout_started", { courseId: typedCourse.id, courseSlug: typedCourse.slug });
 
   return NextResponse.json({
     orderId: order.id,

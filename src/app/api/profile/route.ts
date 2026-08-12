@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { generateRecommendation } from "@/lib/recommend";
+import { logEvent } from "@/lib/analytics";
 
 const profileSchema = z.object({
   occupation: z.string().min(1).max(200),
@@ -78,6 +79,7 @@ export async function POST(req: Request) {
   }
 
   await supabase.from("users").update({ profile_completed: true }).eq("id", user.id);
+  await logEvent(user.id, "onboarding_completed", { industry, careerGoal });
 
   const recommendation = await generateRecommendation({
     occupation,

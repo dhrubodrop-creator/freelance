@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireAdminUser } from "@/lib/current-user";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { logAdminAction } from "@/lib/audit-log";
 
 const moduleSchema = z.object({
   course_id: z.string().uuid("A valid course_id is required"),
@@ -12,8 +13,9 @@ const moduleSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  let admin;
   try {
-    await requireAdminUser();
+    admin = await requireAdminUser();
   } catch (err) {
     const message = err instanceof Error ? err.message : "Forbidden";
     return NextResponse.json({ error: message }, { status: message === "Not authenticated" ? 401 : 403 });
@@ -25,8 +27,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
   }
 
-  const { error } = await supabaseAdmin().from("modules").insert(parsed.data);
+  const { data, error } = await supabaseAdmin().from("modules").insert(parsed.data).select("id").single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await logAdminAction(admin.id, "create", "module", data.id, { title: parsed.data.title, course_id: parsed.data.course_id });
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }

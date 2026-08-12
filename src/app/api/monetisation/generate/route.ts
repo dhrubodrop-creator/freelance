@@ -5,6 +5,8 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { computeProfileCompletion } from "@/lib/profile-completion";
 import { computeSkillGap } from "@/lib/skill-gap";
 import { computeReadinessScore, generateMonetisationPlan } from "@/lib/monetisation";
+import { logEvent } from "@/lib/analytics";
+import { createNotification } from "@/lib/notifications";
 import type { CourseRow, ProfileRow, SkillRow } from "@/types/db";
 
 export async function POST() {
@@ -106,6 +108,15 @@ export async function POST() {
     );
     if (actionsError) return NextResponse.json({ error: actionsError.message }, { status: 500 });
   }
+
+  await logEvent(user.id, "monetisation_plan_created", { planId: planRow.id, readinessScore: readiness.score });
+  await createNotification(
+    user.id,
+    "monetisation_plan",
+    "Your monetisation plan is ready",
+    plan.summary,
+    "/dashboard"
+  );
 
   return NextResponse.json({ ok: true, planId: planRow.id });
 }

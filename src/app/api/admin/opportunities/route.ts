@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { requireAdminUser } from "@/lib/current-user";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { logAdminAction } from "@/lib/audit-log";
 
 const opportunitySchema = z.object({
   title: z.string().min(1, "Title is required").max(200),
@@ -20,8 +21,9 @@ const opportunitySchema = z.object({
 });
 
 export async function POST(req: Request) {
+  let admin;
   try {
-    await requireAdminUser();
+    admin = await requireAdminUser();
   } catch (err) {
     const message = err instanceof Error ? err.message : "Forbidden";
     return NextResponse.json({ error: message }, { status: message === "Not authenticated" ? 401 : 403 });
@@ -34,10 +36,14 @@ export async function POST(req: Request) {
   }
 
   const { source_url, ...rest } = parsed.data;
-  const { error } = await supabaseAdmin()
+  const { data, error } = await supabaseAdmin()
     .from("opportunities")
-    .insert({ ...rest, source_url: source_url || null, source: "curated" });
+    .insert({ ...rest, source_url: source_url || null, source: "curated" })
+    .select("id")
+    .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await logAdminAction(admin.id, "create", "opportunity", data.id, { title: parsed.data.title });
 
   return NextResponse.json({ ok: true }, { status: 201 });
 }
