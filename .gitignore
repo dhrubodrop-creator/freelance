@@ -38,3 +38,8 @@ next-env.d.ts
 
 # Supabase CLI local link/cache state
 /supabase/.temp/
+
+# local-only dev tooling / caches
+.claude/
+__pycache__/
+scripts/__pycache__/

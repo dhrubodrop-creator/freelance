@@ -320,16 +320,16 @@ const COURSES = [
 },
 {
   code:"AI-16", category:"Cloud AI", title:"Azure AI",
-  tagline:"Building and certifying on Microsoft's AI stack — Azure AI Services, Azure OpenAI, and AI-102/AI-900 certification prep.",
+  tagline:"Building and certifying on Microsoft's AI stack — Microsoft Foundry, Azure OpenAI, and AI-900/AI-103 certification prep.",
   weeks:[
     {label:"Week 1 — AI Fundamentals on Azure (AI-900 track)", topics:["AI vs. GenAI","Foundational models and transformers","Responsible AI principles at Microsoft"],
      build:"AI-900 practice review.", outcome:"Passes AI-900-level conceptual questions cold."},
-    {label:"Week 2 — Azure AI Services & Studio", topics:["Azure AI Services","Azure AI Studio","Azure OpenAI Service basics and deployment types"],
-     build:"Deploy and call an Azure OpenAI model from Azure AI Studio.", outcome:"Comfortable navigating the actual Azure AI console, not just the theory."},
+    {label:"Week 2 — Azure AI Services & Microsoft Foundry", topics:["Azure AI Services","Microsoft Foundry (formerly Azure AI Foundry)","Azure OpenAI Service basics and deployment types"],
+     build:"Deploy and call an Azure OpenAI model from Microsoft Foundry.", outcome:"Comfortable navigating the actual Microsoft Foundry console, not just the theory."},
     {label:"Week 3 — Building & Evaluating Copilots", topics:["Prompt Flow","GenAIOps","Evaluation and monitoring for copilots"],
      build:"A working copilot with Prompt Flow evaluation attached.", outcome:"Can build and evaluate a real Azure-hosted copilot."},
-    {label:"Week 4 — AI-102 Certification Push", topics:["Exam guide breakdown","Hands-on labs mapped to exam objectives","Mock exam review"],
-     build:"Capstone: a full AI-102 mock exam plus gap review.", outcome:"Exam-ready for the Azure AI Engineer Associate certification."}
+    {label:"Week 4 — AI-103 Certification Push", topics:["Exam guide breakdown for AI-103 (Azure AI Apps and Agents Developer Associate)","Hands-on labs mapped to exam objectives","Mock exam review"],
+     build:"Capstone: a full AI-103 mock exam plus gap review.", outcome:"Exam-ready for the current Azure AI Apps and Agents Developer Associate certification. (AI-102, the prior credential, was retired June 30, 2026.)"}
   ],
   resources:[
     {u:"https://www.youtube.com/watch?v=K269GcnN-t4", s:"YouTube / freeCodeCamp — Azure AI Engineer Associate (AI-102) Full Course"}

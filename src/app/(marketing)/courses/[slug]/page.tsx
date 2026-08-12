@@ -13,6 +13,8 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { getDiscountedPrice } from "@/lib/pricing";
 import { getEarningsIllustration } from "@/components/marketing/earnings-illustration";
 import { EarningsChart } from "@/components/marketing/earnings-chart";
+import { IndustrySnapshot } from "@/components/marketing/industry-snapshot";
+import { getIndustryData } from "@/lib/industry-data";
 import type { CourseRow, ModuleRow } from "@/types/db";
 
 export const revalidate = 3600;
@@ -58,6 +60,7 @@ export default async function CourseDetailPage({ params }: Props) {
     .order("order_index", { ascending: true });
   const modules = (moduleData ?? []) as ModuleRow[];
   const discountedPrice = getDiscountedPrice(Number(course.price));
+  const industryData = getIndustryData(course.slug);
 
   const courseJsonLd = {
     "@context": "https://schema.org",
@@ -171,6 +174,14 @@ export default async function CourseDetailPage({ params }: Props) {
           </Card>
         </Container>
       </Section>
+
+      {industryData && (
+        <Section>
+          <Container>
+            <IndustrySnapshot data={industryData} />
+          </Container>
+        </Section>
+      )}
     </div>
   );
 }
