@@ -1,15 +1,24 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, Sparkles, GraduationCap, Radio } from "lucide-react";
+import { ArrowRight, Sparkles, GraduationCap, Radio, UserCircle, FolderGit2 } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/current-user";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { computeProfileCompletion } from "@/lib/profile-completion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RegenerateRecommendationButton } from "@/components/portal/regenerate-recommendation-button";
+import { MonetisationInsightCard } from "@/components/portal/monetisation-insight-card";
 import { PriceTag } from "@/components/shared/price-tag";
-import type { CourseRow, EnrollmentRow, RecommendationRow } from "@/types/db";
+import type {
+  CourseRow,
+  EnrollmentRow,
+  MonetisationActionRow,
+  MonetisationPlanRow,
+  ProfileRow,
+  RecommendationRow,
+} from "@/types/db";
 
 type RecommendationWithCourse = RecommendationRow & { course: CourseRow | null };
 type EnrollmentWithCourse = EnrollmentRow & { course: CourseRow | null };
@@ -20,7 +29,17 @@ export default async function DashboardPage() {
 
   const supabase = supabaseAdmin();
 
-  const [{ data: recommendation }, { data: enrollments }, { data: courses }] = await Promise.all([
+  const [
+    { data: recommendation },
+    { data: enrollments },
+    { data: courses },
+    { data: profileData },
+    { data: educationRows },
+    { data: experienceRows },
+    { data: userSkillRows },
+    { data: portfolioRows },
+    { data: planRow },
+  ] = await Promise.all([
     supabase
       .from("recommendations")
       .select("*, course:courses(*)")
@@ -34,6 +53,12 @@ export default async function DashboardPage() {
       .eq("user_id", user.id)
       .eq("status", "active") as unknown as Promise<{ data: EnrollmentWithCourse[] | null }>,
     supabase.from("courses").select("*").order("price", { ascending: true }),
+    supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle(),
+    supabase.from("education").select("id").eq("user_id", user.id).limit(1),
+    supabase.from("work_experiences").select("id").eq("user_id", user.id).limit(1),
+    supabase.from("user_skills").select("id").eq("user_id", user.id),
+    supabase.from("portfolio_items").select("id").eq("user_id", user.id),
+    supabase.from("monetisation_plans").select("*").eq("user_id", user.id).maybeSingle(),
   ]);
 
   const recommendedCourse = recommendation?.course ?? null;
@@ -43,12 +68,56 @@ export default async function DashboardPage() {
     ? await supabase.from("announcements").select("*").order("created_at", { ascending: false }).limit(1).maybeSingle()
     : { data: null };
 
+  const profile = profileData as ProfileRow | null;
+  const profileCompletion = computeProfileCompletion(
+    profile,
+    (educationRows?.length ?? 0) > 0,
+    (experienceRows?.length ?? 0) > 0
+  );
+  const skillsCount = userSkillRows?.length ?? 0;
+  const portfolioCount = portfolioRows?.length ?? 0;
+
+  const plan = (planRow as MonetisationPlanRow | null) ?? null;
+  const { data: actionRows } = plan
+    ? await supabase.from("monetisation_actions").select("*").eq("plan_id", plan.id)
+    : { data: [] };
+  const actions = (actionRows ?? []) as MonetisationActionRow[];
+
   return (
     <div className="flex flex-col gap-8">
       <div>
         <p className="text-sm text-muted-foreground">Welcome back{user.name ? `, ${user.name.split(" ")[0]}` : ""}</p>
         <h1 className="font-heading text-h2 font-bold">Your dashboard</h1>
       </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <Link href="/profile" className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted">
+          <span className="flex items-center gap-1.5 text-micro font-semibold uppercase tracking-wide text-muted-foreground">
+            <UserCircle className="size-3.5" /> Profile
+          </span>
+          <span className="font-heading text-xl font-bold">{profileCompletion.percent}%</span>
+        </Link>
+        <Link href="/skills" className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted">
+          <span className="flex items-center gap-1.5 text-micro font-semibold uppercase tracking-wide text-muted-foreground">
+            <Sparkles className="size-3.5" /> Skills
+          </span>
+          <span className="font-heading text-xl font-bold">{skillsCount}</span>
+        </Link>
+        <Link href="/portfolio" className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-muted">
+          <span className="flex items-center gap-1.5 text-micro font-semibold uppercase tracking-wide text-muted-foreground">
+            <FolderGit2 className="size-3.5" /> Proof projects
+          </span>
+          <span className="font-heading text-xl font-bold">{portfolioCount}</span>
+        </Link>
+        <div className="flex flex-col gap-1 rounded-lg border border-border bg-card p-4">
+          <span className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">
+            Readiness
+          </span>
+          <span className="font-heading text-xl font-bold">{plan ? plan.readiness_score : "—"}</span>
+        </div>
+      </div>
+
+      <MonetisationInsightCard plan={plan} actions={actions} />
 
       {recommendedCourse && !enrolledCourseIds.has(recommendedCourse.id) && (
         <Card className="border-accent/40 bg-gradient-to-br from-accent-50 to-background">

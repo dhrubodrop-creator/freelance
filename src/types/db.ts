@@ -95,6 +95,31 @@ export interface PortfolioItemSkillRow {
   skill_id: string;
 }
 
+export interface SuggestedMonetisationPath {
+  name: string;
+  reasoning: string;
+  skillsPresent: string[];
+  skillsNeeded: string[];
+}
+
+export interface MonetisationPlanRow {
+  id: string;
+  user_id: string;
+  summary: string;
+  suggested_paths: SuggestedMonetisationPath[];
+  readiness_score: number;
+  generated_at: string;
+}
+
+export interface MonetisationActionRow {
+  id: string;
+  plan_id: string;
+  week_number: number;
+  task: string;
+  done: boolean;
+  created_at: string;
+}
+
 export interface EducationRow {
   id: string;
   user_id: string;
@@ -275,6 +300,16 @@ export interface Database {
         Row: PortfolioItemSkillRow;
         Insert: Partial<PortfolioItemSkillRow>;
         Update: Partial<PortfolioItemSkillRow>;
+      };
+      monetisation_plans: {
+        Row: MonetisationPlanRow;
+        Insert: Partial<MonetisationPlanRow>;
+        Update: Partial<MonetisationPlanRow>;
+      };
+      monetisation_actions: {
+        Row: MonetisationActionRow;
+        Insert: Partial<MonetisationActionRow>;
+        Update: Partial<MonetisationActionRow>;
       };
     };
   };
