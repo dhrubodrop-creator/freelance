@@ -18,7 +18,7 @@ export function AuthShell({
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="relative hidden overflow-hidden bg-primary lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <Image src="/images/ropes/webinar-live.webp" alt="An Indian instructor leading an online AI automation session" fill priority sizes="50vw" className="cinematic-image object-cover opacity-60" />
+        <Image src="/images/ropes/webinar-live.webp" alt="An Indian instructor leading an online AI automation session" fill priority sizes="50vw" className="object-cover opacity-60" />
         <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/35 to-primary/65" />
         <div className="absolute inset-0 bg-mesh-hero bg-noise opacity-35" />
         <div className="relative z-10">

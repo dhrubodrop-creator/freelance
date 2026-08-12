@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PriceTag } from "@/components/shared/price-tag";
+import { getCourseVisual } from "@/components/marketing/course-visual";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { CaseStudyRow, CourseRow } from "@/types/db";
 
@@ -22,6 +23,10 @@ export default async function HomePage() {
 
   const courses = (courseData ?? []) as CourseRow[];
   const caseStudies = (caseStudyData ?? []) as CaseStudyRow[];
+  const featuredCourses = courses.slice(0, 3);
+  const publishedCaseStudies = caseStudies.filter(
+    (study) => study.summary && !study.summary.includes("[TESTIMONIAL PLACEHOLDER")
+  );
 
   return (
     <div className="flex flex-col">
@@ -34,7 +39,7 @@ export default async function HomePage() {
             fill
             priority
             sizes="58vw"
-            className="cinematic-image object-cover object-[70%_center] opacity-55 lg:object-center lg:opacity-90"
+            className="object-cover object-[70%_center] opacity-55 lg:object-center lg:opacity-90"
           />
           <div className="absolute inset-0 bg-primary/60 lg:hidden" />
           <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/35 to-primary/5" />
@@ -146,18 +151,20 @@ export default async function HomePage() {
             <Card className="mx-auto max-w-xl border-dashed text-center">
               <CardContent className="flex flex-col items-center gap-3 py-10">
                 <Compass className="size-7 text-accent-600" />
-                <p className="font-heading font-semibold">The next cohort tracks are being prepared.</p>
+                <p className="font-heading font-semibold">Enrollment is between cohorts.</p>
                 <p className="text-sm text-muted-foreground">Join the free webinar to see the method and hear when enrollment opens.</p>
                 <Button asChild variant="outline" size="sm"><Link href="/webinar">Reserve a free seat</Link></Button>
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-6 md:grid-cols-3">
-              {courses.map((course) => (
+              {featuredCourses.map((course) => {
+                const visual = getCourseVisual(course.slug);
+                return (
                 <Card key={course.id} className="group flex flex-col justify-between overflow-hidden py-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted">
                   <div>
-                    <div className="relative h-36 overflow-hidden bg-primary">
-                      <Image src="/images/ropes/course-builder.webp" alt="" fill sizes="(max-width: 767px) 100vw, 33vw" className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <div className="relative aspect-[16/9] overflow-hidden bg-primary">
+                      <Image src={visual.src} alt={visual.alt} fill sizes="(max-width: 767px) 100vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.025]" />
                       <div className="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/10 to-transparent" />
                     </div>
                     <CardHeader className="pt-5">
@@ -179,21 +186,22 @@ export default async function HomePage() {
                     </Button>
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           )}
         </Container>
       </Section>
 
       {/* Testimonials */}
-      {caseStudies.length > 0 && (
+      {publishedCaseStudies.length > 0 && (
         <Section>
           <Container>
             <div className="mb-12 flex flex-col items-center gap-3 text-center">
               <h2 className="font-heading text-h2 font-bold">From the community</h2>
             </div>
             <div className="grid gap-6 sm:grid-cols-2">
-              {caseStudies.map((study) => (
+              {publishedCaseStudies.map((study) => (
                 <Card key={study.id} className="overflow-hidden py-0">
                   <div className="relative h-44">
                     <Image src={study.image_url || "/images/ropes/proof-workbench.webp"} alt={study.image_url ? study.title : "An editorial view of hands-on AI automation work"} fill sizes="(max-width: 639px) 100vw, 50vw" className="object-cover" />

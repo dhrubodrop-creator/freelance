@@ -7,6 +7,7 @@ import { Container } from "@/components/shared/container";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Logo } from "@/components/shared/logo";
 import { PriceTag } from "@/components/shared/price-tag";
+import { getCourseVisual } from "@/components/marketing/course-visual";
 import { RazorpayCheckoutButton } from "@/components/portal/razorpay-checkout-button";
 import type { CourseRow } from "@/types/db";
 
@@ -17,11 +18,12 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
 
   if (!course) notFound();
   const typedCourse = course as CourseRow;
+  const courseVisual = getCourseVisual(typedCourse.slug);
 
   return (
     <div className="relative flex min-h-screen items-center overflow-hidden bg-muted/30 px-6 py-16">
       <div className="absolute inset-y-0 left-0 hidden w-1/2 bg-primary lg:block">
-        <Image src="/images/ropes/proof-workbench.webp" alt="A client-ready AI automation workspace" fill priority sizes="50vw" className="object-cover opacity-70" />
+        <Image src={courseVisual.src} alt={courseVisual.alt} fill priority sizes="50vw" className="object-cover opacity-70" />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/35 to-primary" />
         <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-primary/40" />
       </div>

@@ -12,32 +12,33 @@ export function Logo({ className, dark }: { className?: string; dark?: boolean }
         className
       )}
     >
-      <span className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-[0.6rem] bg-accent shadow-glow transition-transform duration-300 group-hover:-rotate-3 group-hover:scale-105">
+      <span className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-[0.65rem] border border-accent-400 bg-accent shadow-glow transition-transform duration-300 group-hover:-rotate-3 group-hover:scale-105">
         <svg
-          viewBox="0 0 32 32"
-          className="size-6 text-primary"
+          viewBox="0 0 36 36"
+          className="size-[1.65rem] text-primary"
           fill="none"
           aria-hidden="true"
         >
           <path
-            d="M9 25V9.75C9 7.68 10.68 6 12.75 6h3.75a5 5 0 0 1 0 10H9"
+            d="m17.7 11.3-3.3-3.1a5.3 5.3 0 0 0-7.3 7.7l6.2 5.8a5.3 5.3 0 0 0 7.3-.1l1.8-1.8"
             stroke="currentColor"
-            strokeWidth="3.2"
+            strokeWidth="3.4"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
           <path
-            d="m15 16 7 9"
+            d="m18.3 24.7 3.3 3.1a5.3 5.3 0 0 0 7.3-7.7l-6.2-5.8a5.3 5.3 0 0 0-7.3.1l-1.8 1.8"
             stroke="currentColor"
-            strokeWidth="3.2"
+            strokeWidth="3.4"
             strokeLinecap="round"
+            strokeLinejoin="round"
           />
           <path
-            d="M11.2 10.2h7.1M11.2 13h7.1"
+            d="m15.2 19.8 5.6-5.6"
             stroke="currentColor"
-            strokeWidth="0.9"
+            strokeWidth="1.15"
             strokeLinecap="round"
-            opacity="0.42"
+            opacity="0.45"
           />
         </svg>
       </span>

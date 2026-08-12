@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PriceTag } from "@/components/shared/price-tag";
+import { getCourseVisual } from "@/components/marketing/course-visual";
 import {
   Table,
   TableBody,
@@ -61,6 +62,7 @@ export default async function CourseDetailPage({ params }: Props) {
   const course = courseData as CourseRow | null;
 
   if (!course) notFound();
+  const courseVisual = getCourseVisual(course.slug);
 
   const { data: moduleData } = await supabase
     .from("modules")
@@ -112,7 +114,7 @@ export default async function CourseDetailPage({ params }: Props) {
 
           <div className="cinematic-frame relative overflow-hidden rounded-2xl border border-white/15 bg-primary shadow-lifted">
             <div className="relative aspect-[4/3]">
-              <Image src="/images/ropes/course-builder.webp" alt="An Indian professional learning AI automation through a hands-on project" fill priority sizes="(max-width: 1023px) 100vw, 48vw" className="object-cover" />
+              <Image src={courseVisual.src} alt={courseVisual.alt} fill priority sizes="(max-width: 1023px) 100vw, 48vw" className="object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
             </div>
             <Card className="absolute inset-x-4 bottom-4 border-white/15 bg-white/95 text-card-foreground shadow-lifted sm:inset-x-6 sm:bottom-6">
@@ -132,32 +134,20 @@ export default async function CourseDetailPage({ params }: Props) {
 
       <Section>
         <Container className="grid gap-12 lg:grid-cols-[1.3fr_1fr]">
-          <div>
+          {modules.length > 0 && <div>
             <h2 className="mb-5 font-heading text-h3 font-bold">What&rsquo;s inside this track</h2>
-            {modules.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-border bg-muted/30 p-6">
-                <p className="font-heading font-semibold">The curriculum is being prepared for the next cohort.</p>
-                <p className="mt-1 text-sm text-muted-foreground">Enrollment details will show the complete module map before payment.</p>
-              </div>
-            ) : (
-              <ul className="flex flex-col gap-3">
-                {modules.map((module, i) => (
-                  <li
-                    key={module.id}
-                    className="flex items-center gap-4 rounded-lg border border-border bg-card px-4 py-3.5"
-                  >
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-50 text-sm font-semibold text-primary-700">
-                      {i + 1}
-                    </span>
-                    <span className="flex-1 text-sm font-medium">{module.title}</span>
-                    <Lock className="size-4 shrink-0 text-muted-foreground" />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+            <ul className="flex flex-col gap-3">
+              {modules.map((module, i) => (
+                <li key={module.id} className="flex items-center gap-4 rounded-lg border border-border bg-card px-4 py-3.5">
+                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-50 text-sm font-semibold text-primary-700">{i + 1}</span>
+                  <span className="flex-1 text-sm font-medium">{module.title}</span>
+                  <Lock className="size-4 shrink-0 text-muted-foreground" />
+                </li>
+              ))}
+            </ul>
+          </div>}
 
-          <div className="flex flex-col gap-4">
+          <div className={modules.length === 0 ? "flex flex-col gap-4 lg:col-span-2" : "flex flex-col gap-4"}>
             <h2 className="font-heading text-h4 font-bold">What you get</h2>
             {[
               "Structured, hands-on modules",

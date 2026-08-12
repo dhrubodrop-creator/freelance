@@ -28,7 +28,7 @@ export default function WebinarPage() {
     <div>
       <Section className="bg-primary bg-mesh-hero bg-noise text-primary-foreground">
         <div className="absolute inset-y-0 left-0 hidden w-[56%] opacity-45 lg:block">
-          <Image src="/images/ropes/webinar-live.webp" alt="" fill priority sizes="56vw" className="cinematic-image object-cover" />
+          <Image src="/images/ropes/webinar-live.webp" alt="" fill priority sizes="56vw" className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-r from-primary/30 via-primary/70 to-primary" />
           <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-primary/40" />
         </div>

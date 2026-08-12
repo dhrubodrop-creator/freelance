@@ -20,6 +20,17 @@ logos, readable UI, watermarks, luxury fantasy, or generic Western stock-office 
 The images use `next/image`, responsive `sizes`, and small WebP sources (about 60–95 KB each). Motion
 is CSS-only, non-blocking, and inherits the global `prefers-reduced-motion` shutdown rule.
 
+The course catalog uses 19 additional original WebP illustrations under `public/images/courses/`,
+keyed by course slug in `src/components/marketing/course-visual.ts`. Each prompt describes the
+actual subject—agent graphs, retrieval chains, model operations, cloud AI architecture, testing,
+security, product management, or data workflows—while keeping one coherent navy-and-rope-gold
+editorial system. Prompts explicitly excluded readable text, third-party logos, trademarks, and
+watermarks. This avoids presenting one generic laptop image as evidence for unrelated courses.
+
+The earlier perspective tilt and continuous image drift were removed. In Safari, the transformed
+containers created visible trapezoid seams and triangular background gaps at section boundaries;
+the depth now comes from framing, overlays, and shadow without changing layout geometry.
+
 ## Real end-to-end verification pass
 
 Beyond `npm run build`, this was verified against a **real** local Postgres (via Postgres.app)
