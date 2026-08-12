@@ -53,6 +53,10 @@ export interface ModuleRow {
   video_url: string | null;
   order_index: number;
   created_at: string;
+  topics: string[];
+  build_deliverable: string | null;
+  outcome: string | null;
+  video_source_label: string | null;
 }
 
 export interface RecommendationRow {

@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import Image from "next/image";
-import { FileText, FolderDown, PlayCircle } from "lucide-react";
+import { FileText, FolderDown, CheckCircle2, Hammer, Target, ExternalLink } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/current-user";
 import {
@@ -81,27 +80,69 @@ export default async function ModulePage({
           <h1 className="font-heading text-h3 font-semibold">{activeModule.title}</h1>
         </div>
 
-        {embedUrl ? (
-          <div className="aspect-video w-full overflow-hidden rounded-xl bg-ink-950 shadow-card">
-            <iframe
-              src={embedUrl}
-              title={activeModule.title}
-              className="size-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-        ) : (
-          <div className="relative flex aspect-video w-full items-end overflow-hidden rounded-xl bg-primary shadow-card">
-            <Image src="/images/ropes/course-builder.webp" alt="An AI automation learning workspace" fill sizes="(max-width: 1023px) 100vw, 70vw" className="object-cover opacity-55" />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/30 to-transparent" />
-            <div className="relative z-10 flex max-w-lg items-start gap-3 p-6 text-white sm:p-8">
-              <PlayCircle className="mt-0.5 size-6 shrink-0 text-accent" />
-              <div>
-                <p className="font-heading font-semibold">Module workspace</p>
-                <p className="mt-1 text-sm text-white/70">The recorded walkthrough is being prepared. Your module resources and AI mentor remain available here.</p>
-              </div>
+        {embedUrl && (
+          <div className="flex flex-col gap-2">
+            <div className="aspect-video w-full overflow-hidden rounded-xl bg-ink-950 shadow-card">
+              <iframe
+                src={embedUrl}
+                title={activeModule.title}
+                className="size-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
+            {activeModule.video_source_label && (
+              <p className="flex items-center gap-1.5 text-micro text-muted-foreground">
+                <ExternalLink className="size-3 shrink-0" />
+                Curated video: {activeModule.video_source_label} — external, freely available. The
+                breakdown below is written by Ropes.
+              </p>
+            )}
+          </div>
+        )}
+
+        {activeModule.topics.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">What this module covers</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2">
+              {activeModule.topics.map((topic) => (
+                <div key={topic} className="flex items-start gap-2.5 text-sm">
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
+                  <span>{topic}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {(activeModule.build_deliverable || activeModule.outcome) && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {activeModule.build_deliverable && (
+              <Card className="border-accent/30 bg-accent-50/40">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Hammer className="size-4 text-accent-600" />
+                    Build / deliverable
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground">
+                  {activeModule.build_deliverable}
+                </CardContent>
+              </Card>
+            )}
+            {activeModule.outcome && (
+              <Card className="border-primary-100 bg-primary-50/40">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Target className="size-4 text-primary-700" />
+                    Outcome
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground">{activeModule.outcome}</CardContent>
+              </Card>
+            )}
           </div>
         )}
 
