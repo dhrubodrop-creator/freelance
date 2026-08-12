@@ -12,18 +12,48 @@ function verifyCalendlySignature(rawBody: string, header: string | null, secret:
   const parts = Object.fromEntries(header.split(",").map((p) => p.split("=") as [string, string]));
   if (!parts.t || !parts.v1) return false;
   const expected = crypto.createHmac("sha256", secret).update(`${parts.t}.${rawBody}`).digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(parts.v1));
+  const expectedBuf = Buffer.from(expected);
+  // timingSafeEqual throws on a length mismatch rather than returning false —
+  // guard it so a malformed/truncated v1 value rejects cleanly instead of crashing.
+  let actualBuf: Buffer;
+  try {
+    actualBuf = Buffer.from(parts.v1);
+  } catch {
+    return false;
+  }
+  if (expectedBuf.length !== actualBuf.length) return false;
+  return crypto.timingSafeEqual(expectedBuf, actualBuf);
 }
 
 export async function POST(req: Request) {
   const secret = process.env.CALENDLY_WEBHOOK_SIGNING_KEY;
+  if (!secret) {
+    console.error("[webhooks/calendly] CALENDLY_WEBHOOK_SIGNING_KEY is not configured — rejecting request");
+    return NextResponse.json({ error: "Webhook signing key not configured" }, { status: 500 });
+  }
+
   const rawBody = await req.text();
 
-  if (secret && !verifyCalendlySignature(rawBody, req.headers.get("calendly-webhook-signature"), secret)) {
+  if (!verifyCalendlySignature(rawBody, req.headers.get("calendly-webhook-signature"), secret)) {
+    console.warn("[webhooks/calendly] signature verification failed");
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  const event = JSON.parse(rawBody);
+  let event: {
+    event?: string;
+    payload?: {
+      email?: string;
+      event?: string;
+      uri?: string;
+      scheduled_event?: { start_time?: string };
+    };
+  };
+  try {
+    event = JSON.parse(rawBody);
+  } catch {
+    console.warn("[webhooks/calendly] malformed JSON body");
+    return NextResponse.json({ error: "Malformed request body" }, { status: 400 });
+  }
   const supabase = supabaseAdmin();
   const payload = event.payload ?? {};
   const inviteeEmail: string | undefined = payload.email;

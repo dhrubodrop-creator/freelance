@@ -7,9 +7,28 @@ export const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET as string,
 });
 
+/**
+ * `crypto.timingSafeEqual` throws (rather than returning false) when the two
+ * buffers differ in length, so a malformed/truncated signature header would
+ * otherwise crash the request handler with an unhandled 500 instead of
+ * cleanly rejecting it. Length-check first, still using a constant-time
+ * comparison whenever lengths do match.
+ */
+function safeEqual(expectedHex: string, actualHex: string): boolean {
+  const expected = Buffer.from(expectedHex);
+  let actual: Buffer;
+  try {
+    actual = Buffer.from(actualHex);
+  } catch {
+    return false;
+  }
+  if (expected.length !== actual.length) return false;
+  return crypto.timingSafeEqual(expected, actual);
+}
+
 export function verifyRazorpaySignature(body: string, signature: string, secret: string) {
   const expected = crypto.createHmac("sha256", secret).update(body).digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  return safeEqual(expected, signature);
 }
 
 export function verifyRazorpayPaymentSignature(params: {
@@ -21,5 +40,5 @@ export function verifyRazorpayPaymentSignature(params: {
     .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET as string)
     .update(`${params.orderId}|${params.paymentId}`)
     .digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(params.signature));
+  return safeEqual(expected, params.signature);
 }
