@@ -51,6 +51,50 @@ export interface WorkExperienceRow {
   created_at: string;
 }
 
+export type SkillLevel = "beginner" | "intermediate" | "advanced" | "expert";
+
+export interface SkillCategoryRow {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+}
+
+export interface SkillRow {
+  id: string;
+  category_id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+}
+
+export interface UserSkillRow {
+  id: string;
+  user_id: string;
+  skill_id: string;
+  self_level: SkillLevel;
+  created_at: string;
+}
+
+export interface PortfolioItemRow {
+  id: string;
+  user_id: string;
+  course_id: string | null;
+  title: string;
+  description: string | null;
+  problem: string | null;
+  solution: string | null;
+  tools_used: string[];
+  outcome: string | null;
+  links: string[];
+  created_at: string;
+}
+
+export interface PortfolioItemSkillRow {
+  portfolio_item_id: string;
+  skill_id: string;
+}
+
 export interface EducationRow {
   id: string;
   user_id: string;
@@ -215,6 +259,23 @@ export interface Database {
         Update: Partial<WorkExperienceRow>;
       };
       education: { Row: EducationRow; Insert: Partial<EducationRow>; Update: Partial<EducationRow> };
+      skill_categories: {
+        Row: SkillCategoryRow;
+        Insert: Partial<SkillCategoryRow>;
+        Update: Partial<SkillCategoryRow>;
+      };
+      skills: { Row: SkillRow; Insert: Partial<SkillRow>; Update: Partial<SkillRow> };
+      user_skills: { Row: UserSkillRow; Insert: Partial<UserSkillRow>; Update: Partial<UserSkillRow> };
+      portfolio_items: {
+        Row: PortfolioItemRow;
+        Insert: Partial<PortfolioItemRow>;
+        Update: Partial<PortfolioItemRow>;
+      };
+      portfolio_item_skills: {
+        Row: PortfolioItemSkillRow;
+        Insert: Partial<PortfolioItemSkillRow>;
+        Update: Partial<PortfolioItemSkillRow>;
+      };
     };
   };
 }
