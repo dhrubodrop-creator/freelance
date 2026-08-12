@@ -44,7 +44,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
                 <p className="font-medium">{typedCourse.title}</p>
                 <p className="text-sm text-muted-foreground">Lifetime access · 1:1 sessions included</p>
               </div>
-              <PriceTag price={Number(typedCourse.price)} />
+              <PriceTag price={Number(typedCourse.price)} slug={typedCourse.slug} />
             </div>
 
             <RazorpayCheckoutButton courseSlug={typedCourse.slug} courseTitle={typedCourse.title} />

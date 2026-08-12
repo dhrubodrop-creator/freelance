@@ -69,7 +69,7 @@ export default async function DashboardPage() {
                 View this track <ArrowRight className="size-4" />
               </Link>
             </Button>
-            <PriceTag price={Number(recommendedCourse.price)} />
+            <PriceTag price={Number(recommendedCourse.price)} slug={recommendedCourse.slug} />
           </CardContent>
         </Card>
       )}
@@ -126,7 +126,7 @@ export default async function DashboardPage() {
                 <CardDescription className="line-clamp-2">{course.description}</CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
-                <PriceTag price={Number(course.price)} />
+                <PriceTag price={Number(course.price)} slug={course.slug} />
                 <Button asChild variant="outline" size="sm" className="w-fit">
                   <Link href={`/courses/${course.slug}`}>Details</Link>
                 </Button>

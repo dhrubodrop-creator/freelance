@@ -73,7 +73,7 @@ export default async function CoursesPage() {
                     <CardDescription className="line-clamp-3">{course.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="flex items-end justify-between gap-4 pb-6">
-                    <PriceTag price={Number(course.price)} />
+                    <PriceTag price={Number(course.price)} slug={course.slug} />
                     <Button asChild variant="outline" size="sm" className="shrink-0">
                       <Link href={`/courses/${course.slug}`}>
                         View track <ArrowRight className="size-4" />

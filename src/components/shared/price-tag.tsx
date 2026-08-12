@@ -1,30 +1,38 @@
+import { BadgePercent } from "lucide-react";
+
 import { Badge } from "@/components/ui/badge";
-import { getDiscountedPrice, formatINR, PROMO_DISCOUNT_PERCENT } from "@/lib/pricing";
+import { getDiscountedPrice, getDiscountPercent, formatINR } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 export function PriceTag({
   price,
+  slug,
   size = "default",
   className,
 }: {
   price: number;
+  slug?: string;
   size?: "default" | "lg";
   className?: string;
 }) {
-  const discounted = getDiscountedPrice(price);
+  const discounted = getDiscountedPrice(price, slug);
+  const percent = getDiscountPercent(price, slug);
 
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       <span
         className={cn(
-          "font-heading font-bold",
+          "font-heading font-bold text-accent-600",
           size === "lg" ? "text-h2" : "text-lg"
         )}
       >
         {formatINR(discounted)}
       </span>
       <span className="text-sm text-muted-foreground line-through">{formatINR(price)}</span>
-      <Badge variant="accent">{PROMO_DISCOUNT_PERCENT}% off</Badge>
+      <Badge variant="accent" className="gap-1 font-semibold">
+        <BadgePercent className="size-3" />
+        Special discount · {percent}% off
+      </Badge>
     </div>
   );
 }

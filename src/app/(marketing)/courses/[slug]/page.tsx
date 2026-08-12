@@ -59,7 +59,7 @@ export default async function CourseDetailPage({ params }: Props) {
     .eq("course_id", course.id)
     .order("order_index", { ascending: true });
   const modules = (moduleData ?? []) as ModuleRow[];
-  const discountedPrice = getDiscountedPrice(Number(course.price));
+  const discountedPrice = getDiscountedPrice(Number(course.price), course.slug);
   const industryData = getIndustryData(course.slug);
 
   const courseJsonLd = {
@@ -111,7 +111,7 @@ export default async function CourseDetailPage({ params }: Props) {
               <CardContent className="flex items-center justify-between gap-4 py-4">
                 <div>
                   <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">One-time course fee</p>
-                  <PriceTag price={Number(course.price)} size="lg" />
+                  <PriceTag price={Number(course.price)} slug={course.slug} size="lg" />
                 </div>
                 <Button asChild size="lg" variant="accent">
                   <Link href={`/checkout/${course.slug}`}>Enroll now <ArrowRight className="size-4" /></Link>

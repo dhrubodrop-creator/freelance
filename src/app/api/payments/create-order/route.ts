@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
   const typedCourse = course as CourseRow;
   // Price is always computed server-side from the standing discount — never trust a client-sent amount.
-  const amountPaise = Math.round(getDiscountedPrice(Number(typedCourse.price)) * 100);
+  const amountPaise = Math.round(getDiscountedPrice(Number(typedCourse.price), typedCourse.slug) * 100);
 
   const order = await razorpay.orders.create({
     amount: amountPaise,

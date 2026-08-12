@@ -178,7 +178,7 @@ export default async function HomePage() {
                     </CardHeader>
                   </div>
                   <CardContent className="flex flex-col gap-3 pb-6">
-                    <PriceTag price={Number(course.price)} />
+                    <PriceTag price={Number(course.price)} slug={course.slug} />
                     <Button asChild variant="outline" size="sm" className="w-fit">
                       <Link href={`/courses/${course.slug}`}>
                         View track <ArrowRight className="size-4" />
