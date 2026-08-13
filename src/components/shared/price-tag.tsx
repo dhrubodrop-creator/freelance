@@ -17,6 +17,7 @@ export function PriceTag({
 }) {
   const discounted = getDiscountedPrice(price, slug);
   const percent = getDiscountPercent(price, slug);
+  const hasDiscount = discounted < price;
 
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
@@ -28,11 +29,17 @@ export function PriceTag({
       >
         {formatINR(discounted)}
       </span>
-      <span className="text-sm text-muted-foreground line-through">{formatINR(price)}</span>
-      <Badge variant="accent" className="gap-1 font-semibold">
-        <BadgePercent className="size-3" />
-        {size === "lg" ? `Special discount · ${percent}% off` : `${percent}% off`}
-      </Badge>
+      {hasDiscount ? (
+        <>
+          <span className="text-sm text-muted-foreground line-through">
+            {formatINR(price)}
+          </span>
+          <Badge variant="accent" className="gap-1 font-semibold">
+            <BadgePercent className="size-3" />
+            {size === "lg" ? `Special discount · ${percent}% off` : `${percent}% off`}
+          </Badge>
+        </>
+      ) : null}
     </div>
   );
 }
