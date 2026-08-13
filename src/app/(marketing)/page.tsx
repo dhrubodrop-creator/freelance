@@ -67,7 +67,7 @@ export default async function HomePage() {
 
             <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
               <Button asChild size="lg" variant="accent">
-                <Link href="/webinar">
+                <Link href="/webinar" prefetch={false}>
                   Start free webinar <ArrowRight className="size-4" />
                 </Link>
               </Button>
@@ -256,7 +256,7 @@ export default async function HomePage() {
             independent.
           </p>
           <Button asChild size="lg" variant="accent">
-            <Link href="/webinar">
+            <Link href="/webinar" prefetch={false}>
               Start free webinar <ArrowRight className="size-4" />
             </Link>
           </Button>

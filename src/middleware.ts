@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
@@ -30,7 +30,11 @@ const isProtectedRoute = createRouteMatcher([
   "/api/payments/verify(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
+const protectedMiddleware = clerkMiddleware(async (auth) => {
+  await auth.protect();
+});
+
+export default function middleware(req: NextRequest, event: NextFetchEvent) {
   if (["www.ropes.buzz", "ropes-three.vercel.app"].includes(req.nextUrl.hostname)) {
     const canonicalUrl = req.nextUrl.clone();
     canonicalUrl.protocol = "https";
@@ -39,9 +43,11 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   if (isProtectedRoute(req)) {
-    await auth.protect();
+    return protectedMiddleware(req, event);
   }
-});
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: ["/((?!_next|.*\\..*).*)", "/(api|trpc)(.*)"],

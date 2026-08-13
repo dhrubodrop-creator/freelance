@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://ropes.buzz").replace(/\/$/, "");
+export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
+export const WEBSITE_ID = `${SITE_URL}/#website`;
 export const CONTENT_UPDATED_AT = "2026-08-13";
 export const DEFAULT_SOCIAL_IMAGE = "/images/ropes/hero-independent.webp";
 

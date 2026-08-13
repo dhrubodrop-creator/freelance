@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { CourseRow } from "@/types/db";
-import { breadcrumbJsonLd, pageMetadata, safeJsonLd, SITE_URL } from "@/lib/seo";
+import { breadcrumbJsonLd, ORGANIZATION_ID, pageMetadata, safeJsonLd, SITE_URL } from "@/lib/seo";
 import { MarketingBreadcrumbs } from "@/components/marketing/marketing-breadcrumbs";
 
 export const revalidate = 3600;
@@ -32,7 +32,7 @@ export default async function CoursesPage() {
         "@type": "Course",
         name: course.title,
         description: course.description,
-        provider: { "@type": "EducationalOrganization", name: "Ropes", sameAs: SITE_URL },
+        provider: { "@type": "EducationalOrganization", "@id": ORGANIZATION_ID, name: "Ropes", url: SITE_URL },
       },
     })),
   };

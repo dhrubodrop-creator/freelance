@@ -1,26 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Sora, Inter, JetBrains_Mono } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
-import { Toaster } from "@/components/ui/sonner";
-import { safeJsonLd, SITE_URL } from "@/lib/seo";
+import { Sora } from "next/font/google";
+import { ORGANIZATION_ID, safeJsonLd, SITE_URL, WEBSITE_ID } from "@/lib/seo";
 import "./globals.css";
 
 const heading = Sora({
   subsets: ["latin"],
   variable: "--font-heading",
   weight: ["500", "600", "700", "800"],
-  display: "swap",
-});
-
-const body = Inter({
-  subsets: ["latin"],
-  variable: "--font-body",
-  display: "swap",
-});
-
-const mono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
   display: "swap",
 });
 
@@ -77,6 +63,7 @@ export const metadata: Metadata = {
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "EducationalOrganization",
+  "@id": ORGANIZATION_ID,
   name: "Ropes",
   description: "Ropes helps working professionals combine existing expertise with AI systems, practical builds, portfolio evidence, and professional application.",
   url: SITE_URL,
@@ -91,11 +78,12 @@ const organizationJsonLd = {
 const websiteJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": WEBSITE_ID,
   name: "Ropes",
   alternateName: ["Ropes AI", "Ropes.buzz"],
   url: SITE_URL,
   inLanguage: "en-IN",
-  publisher: { "@type": "EducationalOrganization", name: "Ropes", url: SITE_URL },
+  publisher: { "@id": ORGANIZATION_ID },
 };
 
 export const viewport: Viewport = {
@@ -111,21 +99,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en" className={`${heading.variable} ${body.variable} ${mono.variable}`}>
-        <head>
-          <script
-            type="application/ld+json"
-            // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationJsonLd) }}
-          />
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteJsonLd) }} />
-        </head>
-        <body className="min-h-screen bg-background font-sans text-foreground">
-          {children}
-          <Toaster />
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" className={heading.variable}>
+      <head>
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationJsonLd) }}
+        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteJsonLd) }} />
+      </head>
+      <body className="min-h-screen bg-background font-sans text-foreground">{children}</body>
+    </html>
   );
 }

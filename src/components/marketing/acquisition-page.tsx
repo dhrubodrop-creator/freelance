@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ACQUISITION_PAGES, SKILL_GUIDES, type AcquisitionPage } from "@/lib/acquisition-content";
-import { breadcrumbJsonLd, CONTENT_UPDATED_AT, safeJsonLd, SITE_URL } from "@/lib/seo";
+import { breadcrumbJsonLd, CONTENT_UPDATED_AT, ORGANIZATION_ID, safeJsonLd, SITE_URL, WEBSITE_ID } from "@/lib/seo";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { CourseRow } from "@/types/db";
 
@@ -31,8 +31,8 @@ export async function AcquisitionPageTemplate({ page }: { page: AcquisitionPage 
     datePublished: CONTENT_UPDATED_AT,
     dateModified: CONTENT_UPDATED_AT,
     inLanguage: "en-IN",
-    isPartOf: { "@type": "WebSite", name: "Ropes", url: SITE_URL },
-    publisher: { "@type": "EducationalOrganization", name: "Ropes", url: SITE_URL },
+    isPartOf: { "@id": WEBSITE_ID },
+    publisher: { "@id": ORGANIZATION_ID },
     about: page.skillSlugs.map((slug) => ({ "@type": "DefinedTerm", name: SKILL_GUIDES[slug]?.name ?? slug })),
   };
 
