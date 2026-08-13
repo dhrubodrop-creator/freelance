@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
+import crypto from "node:crypto";
 
 import { razorpay } from "@/lib/razorpay";
 import { supabaseAdmin } from "@/lib/supabase/server";
@@ -35,10 +36,14 @@ export async function POST(req: Request) {
   // Price is always computed server-side from the standing discount — never trust a client-sent amount.
   const amountPaise = Math.round(getDiscountedPrice(Number(typedCourse.price), typedCourse.slug) * 100);
 
+  // Razorpay caps `receipt` at 56 chars; course slug + Clerk user ID + timestamp
+  // routinely exceeds that, so keep it short and put the traceable info in `notes` instead.
+  const receipt = `rcpt_${Date.now().toString(36)}_${crypto.randomBytes(6).toString("hex")}`;
+
   const order = await razorpay.orders.create({
     amount: amountPaise,
     currency: "INR",
-    receipt: `${typedCourse.slug}-${userId}-${Date.now()}`,
+    receipt,
     notes: { courseId: typedCourse.id, courseSlug: typedCourse.slug, clerkUserId: userId },
   });
 
