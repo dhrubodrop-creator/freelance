@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { FileText, FolderDown, CheckCircle2, Hammer, Target, Sparkles, Compass } from "lucide-react";
+import { FileText, FolderDown, CheckCircle2, Hammer, Target, Sparkles, Compass, FolderKanban } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/current-user";
 import {
@@ -99,6 +99,9 @@ export default async function ModulePage({
     .filter((s): s is SkillRow => Boolean(s));
 
   const hasDeepContent = playbookSections.length > 0 || exercises.length > 0 || interviewQuestions.length > 0;
+  const completedProjectStages = modules
+    .slice(0, activeIndex)
+    .filter((module) => Boolean(progress.get(module.id)?.completed_at));
 
   const unlockedIds = new Set(modules.filter((_, i) => isModuleUnlocked(modules, i, progress)).map((m) => m.id));
   const completedIds = new Set(
@@ -147,6 +150,35 @@ export default async function ModulePage({
           <CardContent className="flex items-center gap-2.5 py-4 text-sm">
             <Compass className="size-4 shrink-0 text-primary-700" />
             <span>{activeGuidance.reason}</span>
+          </CardContent>
+        </Card>
+      )}
+      {course.track === "AI-Native Development" && (
+        <Card className="border-primary-100 bg-primary-50/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <FolderKanban className="size-4 text-primary-700" />
+              Project workspace
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 text-sm sm:grid-cols-2">
+            <div>
+              <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">Current stage</p>
+              <p className="mt-1 font-medium">{activeIndex + 1}. {activeModule.title}</p>
+              <p className="mt-3 text-micro font-semibold uppercase tracking-wide text-muted-foreground">Next task</p>
+              <p className="mt-1">{activeModule.topics[0] ?? "Complete this stage's deliverable."}</p>
+            </div>
+            <div>
+              <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">Completed stages</p>
+              <p className="mt-1 text-muted-foreground">
+                {completedProjectStages.length > 0
+                  ? completedProjectStages.map((module) => module.title).join(" · ")
+                  : "No completed project stages yet."}
+              </p>
+              <Link href="/portfolio" className="mt-3 inline-flex font-semibold text-accent-600 hover:underline">
+                Open deliverables, decisions, portfolio and capstone
+              </Link>
+            </div>
           </CardContent>
         </Card>
       )}

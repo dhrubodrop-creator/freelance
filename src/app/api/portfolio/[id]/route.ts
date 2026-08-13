@@ -38,6 +38,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { skill_ids, ...itemFields } = parsed.data;
   const supabase = supabaseAdmin();
 
+  if (itemFields.course_id) {
+    const { count } = await supabase
+      .from("enrollments")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", ownUserId)
+      .eq("course_id", itemFields.course_id)
+      .eq("status", "active");
+    if (!count) return NextResponse.json({ error: "Choose a course you are actively enrolled in." }, { status: 403 });
+  }
+
   if (Object.keys(itemFields).length > 0) {
     const { error, count } = await supabase
       .from("portfolio_items")

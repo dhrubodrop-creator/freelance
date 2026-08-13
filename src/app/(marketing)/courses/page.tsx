@@ -47,7 +47,7 @@ export default async function CoursesPage() {
           <span className="text-micro font-semibold uppercase tracking-wide text-accent-600">Choose by outcome</span>
           <h1 className="mt-2 font-heading text-h1 font-bold">Course tracks</h1>
           <p className="mt-3 text-body-lg text-muted-foreground">
-            Nineteen focused paths. Every track has its own tools, production context, and practical outcome.
+            {courses.length} focused paths. Every track has its own tools, production context, and practical outcome.
           </p>
         </div>
 

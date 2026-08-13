@@ -75,6 +75,14 @@ const COURSE_VISUALS: Record<string, { src: string; alt: string }> = {
     src: "/images/courses/ai-llm-testing.webp",
     alt: "An Indian quality engineer evaluating varied language-model outputs against test cases",
   },
+  "ai-native-web-app-builder": {
+    src: "/images/courses/ai-native-web-app-builder.webp",
+    alt: "An Indian product builder reviewing a full-stack AI web application, its data model, authentication flow, and source code",
+  },
+  "ai-native-website-builder": {
+    src: "/images/courses/ai-native-website-builder.webp",
+    alt: "An Indian designer-developer refining a cinematic business website across responsive desktop and mobile layouts",
+  },
 };
 
 const FALLBACK_VISUAL = {

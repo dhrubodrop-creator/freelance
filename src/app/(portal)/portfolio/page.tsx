@@ -138,6 +138,7 @@ export default async function PortfolioPage() {
         <PortfolioFormDialog
           title="Add a project"
           skills={skills}
+          courses={enrolledCourses}
           trigger={
             <Button className="gap-1.5">
               <Plus className="size-4" /> Add project
@@ -166,6 +167,7 @@ export default async function PortfolioPage() {
                     <PortfolioFormDialog
                       title="Edit project"
                       skills={skills}
+                      courses={enrolledCourses}
                       initial={item}
                       initialSkillIds={itemSkillIds}
                       trigger={

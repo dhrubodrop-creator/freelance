@@ -33,6 +33,29 @@ export async function POST(req: Request) {
   }
 
   const courseId = parsed.data.courseId ?? null;
+  const moduleId = parsed.data.moduleId ?? null;
+
+  if (moduleId && !courseId) {
+    return NextResponse.json({ error: "A module must be requested within its course." }, { status: 400 });
+  }
+  if (courseId) {
+    const { count: enrollmentCount } = await supabase
+      .from("enrollments")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("course_id", courseId)
+      .eq("status", "active");
+    if (!enrollmentCount) return NextResponse.json({ error: "Active enrollment required." }, { status: 403 });
+
+    if (moduleId) {
+      const { count: moduleCount } = await supabase
+        .from("modules")
+        .select("id", { count: "exact", head: true })
+        .eq("id", moduleId)
+        .eq("course_id", courseId);
+      if (!moduleCount) return NextResponse.json({ error: "Module does not belong to this course." }, { status: 400 });
+    }
+  }
 
   await supabase.from("mentor_messages").insert({
     user_id: user.id,
@@ -46,7 +69,7 @@ export async function POST(req: Request) {
   const reply = await answerMentorQuestion({
     userId: user.id,
     courseId,
-    moduleId: parsed.data.moduleId ?? null,
+    moduleId,
     message: parsed.data.message,
     mode: parsed.data.mode,
     careerGoal: profile?.career_goal ?? null,

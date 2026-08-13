@@ -118,13 +118,62 @@ export async function answerMentorQuestion(params: {
   if (params.moduleId) {
     const { data: moduleRow } = await supabase
       .from("modules")
-      .select("title, topics, build_deliverable, outcome")
+      .select("title, topics, build_deliverable, outcome, course_id")
       .eq("id", params.moduleId)
       .maybeSingle();
     if (moduleRow) {
       const parts = [`Module: ${moduleRow.title}`];
       if (moduleRow.topics?.length) parts.push(`Topics: ${moduleRow.topics.join(", ")}`);
       if (moduleRow.build_deliverable) parts.push(`Build: ${moduleRow.build_deliverable}`);
+      if (moduleRow.outcome) parts.push(`Outcome: ${moduleRow.outcome}`);
+
+      const [
+        { data: sectionRows },
+        { data: exerciseRows },
+        { data: completedExerciseRows },
+        { data: skillRows },
+        { data: projectRows },
+        { data: progressRow },
+      ] = await Promise.all([
+        supabase
+          .from("module_playbook_sections")
+          .select("section_type, title, content")
+          .eq("module_id", params.moduleId)
+          .in("section_type", ["workflow", "debugging_playbook", "checklist"])
+          .order("order_index"),
+        supabase.from("exercises").select("id, title").eq("module_id", params.moduleId).order("order_index"),
+        supabase
+          .from("exercise_completions")
+          .select("exercise_id, exercises!inner(module_id)")
+          .eq("user_id", params.userId)
+          .eq("exercises.module_id", params.moduleId),
+        supabase.from("module_skills").select("skills(name)").eq("module_id", params.moduleId),
+        supabase
+          .from("portfolio_items")
+          .select("title, problem, solution, outcome, links")
+          .eq("user_id", params.userId)
+          .eq("course_id", moduleRow.course_id)
+          .limit(3),
+        supabase.from("progress").select("completed_at").eq("user_id", params.userId).eq("module_id", params.moduleId).maybeSingle(),
+      ]);
+
+      const completedExerciseIds = new Set((completedExerciseRows ?? []).map((row) => row.exercise_id as string));
+      const nextExercise = (exerciseRows ?? []).find((exercise) => !completedExerciseIds.has(exercise.id));
+      parts.push(`Module status: ${progressRow?.completed_at ? "completed" : "in progress"}.`);
+      parts.push(`Practice status: ${completedExerciseIds.size}/${exerciseRows?.length ?? 0} exercises completed.`);
+      if (nextExercise) parts.push(`Current next task: ${nextExercise.title}.`);
+      const skillNames = ((skillRows ?? []) as unknown as { skills: { name: string } | null }[])
+        .map((row) => row.skills?.name)
+        .filter((name): name is string => Boolean(name));
+      if (skillNames.length) parts.push(`Skills evidenced by this stage: ${skillNames.join(", ")}.`);
+      for (const section of sectionRows ?? []) {
+        parts.push(`${section.title}: ${section.content.slice(0, 1800)}`);
+      }
+      if (projectRows?.length) {
+        parts.push(`Learner's course-linked project evidence: ${projectRows.map((project) => JSON.stringify(project)).join("\n")}`);
+      } else {
+        parts.push("Learner has not yet linked a portfolio project to this course.");
+      }
       moduleContext = parts.join("\n");
     }
   }

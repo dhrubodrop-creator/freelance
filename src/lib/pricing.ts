@@ -32,6 +32,12 @@ export const SPECIAL_PRICE_INR: Record<string, number> = {
   llmops: 99,
   "ai-security": 99,
   "ai-engineering-for-forward-deployed-engineer": 99,
+
+  // Trial pricing — real ₹1 price, not a fake discount badge. Mapped
+  // explicitly so getDiscountedPrice never falls through to the 70%-off
+  // formula (which would round 30% of ₹1 down to ₹0).
+  "ai-native-web-app-builder": 1,
+  "ai-native-website-builder": 1,
 };
 
 /** Special-discount sale price, falling back to the standing 70%-off launch price. */

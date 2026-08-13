@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { PortfolioItemRow, SkillRow } from "@/types/db";
+import type { CourseRow, PortfolioItemRow, SkillRow } from "@/types/db";
 
 function splitTags(value: string): string[] {
   return value
@@ -30,12 +30,14 @@ export function PortfolioFormDialog({
   trigger,
   title,
   skills,
+  courses,
   initial,
   initialSkillIds,
 }: {
   trigger: React.ReactNode;
   title: string;
   skills: SkillRow[];
+  courses: CourseRow[];
   initial?: PortfolioItemRow;
   initialSkillIds?: string[];
 }) {
@@ -47,6 +49,7 @@ export function PortfolioFormDialog({
   const [problem, setProblem] = React.useState(initial?.problem ?? "");
   const [solution, setSolution] = React.useState(initial?.solution ?? "");
   const [outcome, setOutcome] = React.useState(initial?.outcome ?? "");
+  const [courseId, setCourseId] = React.useState(initial?.course_id ?? "");
   const [toolsUsed, setToolsUsed] = React.useState((initial?.tools_used ?? []).join(", "));
   const [links, setLinks] = React.useState((initial?.links ?? []).join(", "));
   const [selectedSkills, setSelectedSkills] = React.useState<Set<string>>(
@@ -77,6 +80,7 @@ export function PortfolioFormDialog({
           problem: problem || null,
           solution: solution || null,
           outcome: outcome || null,
+          course_id: courseId || null,
           tools_used: splitTags(toolsUsed),
           links: splitTags(links),
           skill_ids: Array.from(selectedSkills),
@@ -107,6 +111,21 @@ export function PortfolioFormDialog({
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="pf-title">Project title</Label>
             <Input id="pf-title" required value={itemTitle} onChange={(e) => setItemTitle(e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="pf-course">Ropes course</Label>
+            <select
+              id="pf-course"
+              value={courseId}
+              onChange={(event) => setCourseId(event.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">Independent / client project</option>
+              {courses.map((course) => (
+                <option key={course.id} value={course.id}>{course.title}</option>
+              ))}
+            </select>
+            <p className="text-micro text-muted-foreground">Link the build to its course so it can become eligible capstone evidence.</p>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="pf-description">What did you build?</Label>

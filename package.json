@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "indexnow": "node scripts/submit-indexnow.mjs"
+    "indexnow": "node scripts/submit-indexnow.mjs",
+    "seed:ai-native": "node scripts/seed-ai-native-courses.mjs",
+    "seed:ai-native:apply": "node scripts/seed-ai-native-courses.mjs --apply"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.39.6",

@@ -32,6 +32,15 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "User record not found — try refreshing." }, { status: 404 });
 
   const { skill_ids, ...itemFields } = parsed.data;
+  if (itemFields.course_id) {
+    const { count } = await supabase
+      .from("enrollments")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("course_id", itemFields.course_id)
+      .eq("status", "active");
+    if (!count) return NextResponse.json({ error: "Choose a course you are actively enrolled in." }, { status: 403 });
+  }
   const { data: item, error } = await supabase
     .from("portfolio_items")
     .insert({ ...itemFields, user_id: user.id })
