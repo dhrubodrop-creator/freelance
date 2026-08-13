@@ -289,7 +289,7 @@ async function apply() {
     }
     const { error: capstoneError } = await db.from("course_capstones").upsert({ id: stableUuid(`capstone:${course.slug}`), course_id: courseId, title: course.capstone.title, brief: course.capstone.brief, requirements: course.capstone.requirements, scoring_dimensions: course.capstone.scoring }, { onConflict: "course_id" });
     if (capstoneError) throw capstoneError;
-    const chunks = course.modules.map((module, i) => ({ id: stableUuid(`chunk:${course.slug}:${i}`), course_id: courseId, module_id: moduleIds[i], source_type: "ai_native_course", content: [`Course: ${course.title}. Module ${i + 1}: ${module.title}.`, `Objective: ${module.objective}`, `Topics: ${module.topics.join("; ")}.`, `Project deliverable: ${module.build}`, `Definition of done: ${module.checklist.join("; ")}.`, `Possible professional applications, not guaranteed outcomes: ${course.servicePaths.join("; ")}.`].join(" ") }));
+    const chunks = course.modules.map((module, i) => ({ id: stableUuid(`chunk:${course.slug}:${i}`), course_id: courseId, module_id: moduleIds[i], source_type: "playbook", content: [`Course: ${course.title}. Module ${i + 1}: ${module.title}.`, `Objective: ${module.objective}`, `Topics: ${module.topics.join("; ")}.`, `Project deliverable: ${module.build}`, `Definition of done: ${module.checklist.join("; ")}.`, `Possible professional applications, not guaranteed outcomes: ${course.servicePaths.join("; ")}.`].join(" ") }));
     const { error: chunkError } = await db.from("content_chunks").upsert(chunks, { onConflict: "id" });
     if (chunkError) throw chunkError;
     result.push({ courseId, slug: course.slug, moduleIds, capstoneId: stableUuid(`capstone:${course.slug}`) });
