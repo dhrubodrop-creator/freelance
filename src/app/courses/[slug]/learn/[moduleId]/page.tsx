@@ -318,7 +318,7 @@ export default async function ModulePage({
         )}
       </div>
 
-      <MentorChatWidget courseId={course.id} />
+      <MentorChatWidget courseId={course.id} moduleId={activeModule.id} moduleTitle={activeModule.title} />
     </div>
   );
 }

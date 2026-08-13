@@ -8,6 +8,7 @@ import { answerMentorQuestion, isRateLimited } from "@/lib/mentor";
 const bodySchema = z.object({
   message: z.string().min(1).max(2000),
   courseId: z.string().uuid().nullable().optional(),
+  moduleId: z.string().uuid().nullable().optional(),
   mode: z
     .enum(["explain", "hint", "socratic", "debug", "review", "challenge", "interview", "career", "next_step"])
     .optional(),
@@ -45,6 +46,7 @@ export async function POST(req: Request) {
   const reply = await answerMentorQuestion({
     userId: user.id,
     courseId,
+    moduleId: parsed.data.moduleId ?? null,
     message: parsed.data.message,
     mode: parsed.data.mode,
     careerGoal: profile?.career_goal ?? null,

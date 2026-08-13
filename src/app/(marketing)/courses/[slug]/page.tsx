@@ -118,12 +118,12 @@ export default async function CourseDetailPage({ params }: Props) {
               <div className="absolute inset-0 bg-gradient-to-t from-primary via-transparent to-transparent" />
             </div>
             <Card className="absolute inset-x-4 bottom-4 border-white/15 bg-white/95 text-card-foreground shadow-lifted sm:inset-x-6 sm:bottom-6">
-              <CardContent className="flex items-center justify-between gap-4 py-4">
+              <CardContent className="flex flex-col items-start gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                 <div>
                   <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">One-time course fee</p>
                   <PriceTag price={Number(course.price)} slug={course.slug} size="lg" />
                 </div>
-                <Button asChild size="lg" variant="accent">
+                <Button asChild size="lg" variant="accent" className="w-full sm:w-auto">
                   <Link href={`/checkout/${course.slug}`}>Enroll now <ArrowRight className="size-4" /></Link>
                 </Button>
               </CardContent>

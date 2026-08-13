@@ -27,7 +27,15 @@ interface ChatMessage {
   content: string;
 }
 
-export function MentorChatWidget({ courseId }: { courseId: string }) {
+export function MentorChatWidget({
+  courseId,
+  moduleId,
+  moduleTitle,
+}: {
+  courseId: string;
+  moduleId?: string;
+  moduleTitle?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -61,7 +69,7 @@ export function MentorChatWidget({ courseId }: { courseId: string }) {
       const res = await fetch("/api/mentor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, courseId, mode }),
+        body: JSON.stringify({ message, courseId, moduleId, mode }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
@@ -129,7 +137,9 @@ export function MentorChatWidget({ courseId }: { courseId: string }) {
             {loadingHistory && <p className="text-center text-xs text-muted-foreground">Loading…</p>}
             {!loadingHistory && messages.length === 0 && (
               <p className="text-center text-sm text-muted-foreground">
-                Ask about this module in whichever mode fits — I have context on the course content.
+                {moduleTitle
+                  ? `Ask about "${moduleTitle}" in whichever mode fits — I have context on this module.`
+                  : "Ask about this module in whichever mode fits — I have context on the course content."}
               </p>
             )}
             {messages.map((m) => (

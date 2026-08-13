@@ -90,6 +90,7 @@ student use the "Request human help" option rather than guessing.`;
 export async function answerMentorQuestion(params: {
   userId: string;
   courseId: string | null;
+  moduleId?: string | null;
   message: string;
   mode?: CoachMode;
   careerGoal?: string | null;
@@ -110,6 +111,24 @@ export async function answerMentorQuestion(params: {
     }
   }
 
+  // Hierarchical context (course -> module): tells the coach exactly what
+  // screen the learner is on, not just which course, so "explain this"
+  // resolves to the right lesson instead of a course-wide guess.
+  let moduleContext = "";
+  if (params.moduleId) {
+    const { data: moduleRow } = await supabase
+      .from("modules")
+      .select("title, topics, build_deliverable, outcome")
+      .eq("id", params.moduleId)
+      .maybeSingle();
+    if (moduleRow) {
+      const parts = [`Module: ${moduleRow.title}`];
+      if (moduleRow.topics?.length) parts.push(`Topics: ${moduleRow.topics.join(", ")}`);
+      if (moduleRow.build_deliverable) parts.push(`Build: ${moduleRow.build_deliverable}`);
+      moduleContext = parts.join("\n");
+    }
+  }
+
   const { data: historyData } = await supabase
     .from("mentor_messages")
     .select("*")
@@ -122,6 +141,7 @@ export async function answerMentorQuestion(params: {
   const contextMessages: { role: "system" | "user" | "assistant"; content: string }[] = [
     { role: "system", content: systemContent },
   ];
+  if (moduleContext) contextMessages.push({ role: "system", content: `Learner's current module:\n${moduleContext}` });
   if (context) contextMessages.push({ role: "system", content: `Course context:\n${context}` });
   if (params.careerGoal) {
     contextMessages.push({ role: "system", content: `User's stated career goal: ${params.careerGoal}` });

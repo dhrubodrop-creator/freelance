@@ -84,7 +84,37 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .update({ status: "reviewed", updated_at: new Date().toISOString() })
     .eq("id", submission.id);
 
-  await logEvent(user.id, "capstone_reviewed", { capstoneId, portfolioItemId: item.id });
+  // Close the learning -> capstone -> demonstrated-skill loop: a capstone
+  // that clears a bare-pass bar (avg dimension score >= 50 — never award
+  // evidence for work that didn't actually demonstrate the skill) auto-tags
+  // its portfolio item with every skill this course teaches, the same
+  // portfolio_item_skills join computeMasteryForSkills already reads. Without
+  // this, a learner would have to manually re-tag skills the capstone
+  // already proved, and Proof Profile / Market Pulse / monetisation would
+  // stay blind to a passed capstone until they did.
+  const dimensionScoreValues = Object.values(review.dimensionScores);
+  const avgScore =
+    dimensionScoreValues.length > 0
+      ? dimensionScoreValues.reduce((sum, s) => sum + s.score, 0) / dimensionScoreValues.length
+      : 0;
+  if (avgScore >= 50) {
+    const { data: courseModules } = await supabase.from("modules").select("id").eq("course_id", capstoneRow.course_id);
+    const moduleIds = (courseModules ?? []).map((m) => m.id);
+    if (moduleIds.length > 0) {
+      const { data: moduleSkillRows } = await supabase.from("module_skills").select("skill_id").in("module_id", moduleIds);
+      const courseSkillIds = Array.from(new Set((moduleSkillRows ?? []).map((r) => r.skill_id)));
+      if (courseSkillIds.length > 0) {
+        await supabase
+          .from("portfolio_item_skills")
+          .upsert(
+            courseSkillIds.map((skill_id) => ({ portfolio_item_id: item.id, skill_id })),
+            { onConflict: "portfolio_item_id,skill_id", ignoreDuplicates: true }
+          );
+      }
+    }
+  }
+
+  await logEvent(user.id, "capstone_reviewed", { capstoneId, portfolioItemId: item.id, avgScore });
   await createNotification(
     user.id,
     "capstone_reviewed",
