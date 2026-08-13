@@ -4,6 +4,9 @@ import { CalendarClock, Laptop, MessageCircleQuestion, Wrench } from "lucide-rea
 import { Container, Section } from "@/components/shared/container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WebinarForm } from "@/components/marketing/webinar-form";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata({ title: "Free Webinar: Build AI Systems From Your Professional Expertise", description: "See how working professionals use practical AI and no-code systems to build project evidence and explore freelance or independent work—without a guaranteed-income pitch.", path: "/webinar" });
 
 const AGENDA = [
   {

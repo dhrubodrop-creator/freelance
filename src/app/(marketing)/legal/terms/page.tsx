@@ -1,8 +1,7 @@
 import { Container, Section } from "@/components/shared/container";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Terms of Service",
-};
+export const metadata = pageMetadata({ title: "Terms of Service", description: "Terms governing Ropes accounts, course access, payments, acceptable use, and educational outcome limitations.", path: "/legal/terms" });
 
 export default function TermsPage() {
   return (

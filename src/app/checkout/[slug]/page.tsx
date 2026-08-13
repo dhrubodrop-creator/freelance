@@ -10,6 +10,9 @@ import { PriceTag } from "@/components/shared/price-tag";
 import { getCourseVisual } from "@/components/marketing/course-visual";
 import { RazorpayCheckoutButton } from "@/components/portal/razorpay-checkout-button";
 import type { CourseRow } from "@/types/db";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { robots: { index: false, follow: false, nocache: true } };
 
 export default async function CheckoutPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

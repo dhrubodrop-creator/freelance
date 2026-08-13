@@ -1,8 +1,7 @@
 import { Container, Section } from "@/components/shared/container";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Refund Policy",
-};
+export const metadata = pageMetadata({ title: "Refund Policy", description: "The Ropes course refund policy, eligibility conditions, request process, and payment handling information.", path: "/legal/refund" });
 
 export default function RefundPage() {
   return (

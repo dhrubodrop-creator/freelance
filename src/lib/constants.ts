@@ -3,6 +3,7 @@ export const SITE_TAGLINE = "Learn the ropes. Go independent.";
 
 export const NAV_LINKS = [
   { href: "/courses", label: "Courses" },
+  { href: "/resources", label: "Resources" },
   { href: "/case-studies", label: "Case Studies" },
   { href: "/webinar", label: "Free Webinar" },
   { href: "/contact", label: "Contact" },

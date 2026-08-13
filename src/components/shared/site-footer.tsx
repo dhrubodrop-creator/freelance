@@ -3,13 +3,27 @@ import { MessageCircle, ShieldCheck } from "lucide-react";
 
 import { Logo } from "@/components/shared/logo";
 import { Container } from "@/components/shared/container";
-import { NAV_LINKS, LEGAL_LINKS, WHATSAPP_LINK, SITE_TAGLINE } from "@/lib/constants";
+import { LEGAL_LINKS, WHATSAPP_LINK, SITE_TAGLINE } from "@/lib/constants";
+
+const DISCOVER_LINKS = [
+  { href: "/ai-freelancing", label: "AI freelancing" },
+  { href: "/side-hustle-for-working-professionals", label: "Professional side hustle" },
+  { href: "/solopreneur-with-ai", label: "Solopreneur with AI" },
+  { href: "/for-professionals", label: "AI for professionals" },
+];
+
+const LEARN_LINKS = [
+  { href: "/courses", label: "Courses" },
+  { href: "/resources", label: "Resource hub" },
+  { href: "/resources/projects", label: "Project briefs" },
+  { href: "/webinar", label: "Free webinar" },
+];
 
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-primary text-primary-foreground/90">
       <Container className="py-14">
-        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.35fr_1fr_1fr_0.8fr]">
           <div className="flex flex-col gap-3">
             <Logo dark />
             <p className="max-w-xs text-sm text-primary-foreground/70">{SITE_TAGLINE}</p>
@@ -25,8 +39,8 @@ export function SiteFooter() {
           </div>
 
           <div className="flex flex-col gap-3 text-sm">
-            <span className="font-heading font-semibold text-primary-foreground">Explore</span>
-            {NAV_LINKS.map((link) => (
+            <span className="font-heading font-semibold text-primary-foreground">Discover</span>
+            {DISCOVER_LINKS.map((link) => (
               <Link key={link.href} href={link.href} className="text-primary-foreground/70 hover:text-white">
                 {link.label}
               </Link>
@@ -34,20 +48,18 @@ export function SiteFooter() {
           </div>
 
           <div className="flex flex-col gap-3 text-sm">
-            <span className="font-heading font-semibold text-primary-foreground">Account</span>
-            <Link href="/dashboard" className="text-primary-foreground/70 hover:text-white">
-              Dashboard
-            </Link>
-            <Link href="/community" className="text-primary-foreground/70 hover:text-white">
-              Community
-            </Link>
-            <Link href="/contact" className="text-primary-foreground/70 hover:text-white">
-              Support
-            </Link>
+            <span className="font-heading font-semibold text-primary-foreground">Learn &amp; build</span>
+            {LEARN_LINKS.map((link) => (
+              <Link key={link.href} href={link.href} className="text-primary-foreground/70 hover:text-white">
+                {link.label}
+              </Link>
+            ))}
           </div>
 
           <div className="flex flex-col gap-3 text-sm">
             <span className="font-heading font-semibold text-primary-foreground">Legal</span>
+            <Link href="/about" className="text-primary-foreground/70 hover:text-white">About Ropes</Link>
+            <Link href="/contact" className="text-primary-foreground/70 hover:text-white">Contact</Link>
             {LEGAL_LINKS.map((link) => (
               <Link key={link.href} href={link.href} className="text-primary-foreground/70 hover:text-white">
                 {link.label}

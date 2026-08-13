@@ -5,13 +5,11 @@ import { Container, Section } from "@/components/shared/container";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { CaseStudyRow } from "@/types/db";
+import { pageMetadata } from "@/lib/seo";
 
 export const revalidate = 3600;
 
-export const metadata = {
-  title: "Case Studies",
-  description: "Stories from Ropes students building independent AI no-code practices.",
-};
+export const metadata = pageMetadata({ title: "Verified Ropes Student Case Studies", description: "Verified Ropes learner stories are published only with student approval and supporting context. No invented testimonials or stock-photo endorsements.", path: "/case-studies" });
 
 export default async function CaseStudiesPage() {
   const supabase = supabaseAdmin();

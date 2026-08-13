@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
@@ -30,6 +31,13 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
+  if (["www.ropes.buzz", "ropes-three.vercel.app"].includes(req.nextUrl.hostname)) {
+    const canonicalUrl = req.nextUrl.clone();
+    canonicalUrl.protocol = "https";
+    canonicalUrl.host = "ropes.buzz";
+    return NextResponse.redirect(canonicalUrl, 308);
+  }
+
   if (isProtectedRoute(req)) {
     await auth.protect();
   }

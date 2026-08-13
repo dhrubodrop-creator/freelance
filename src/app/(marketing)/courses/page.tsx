@@ -10,23 +10,39 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { CourseRow } from "@/types/db";
+import { breadcrumbJsonLd, pageMetadata, safeJsonLd, SITE_URL } from "@/lib/seo";
+import { MarketingBreadcrumbs } from "@/components/marketing/marketing-breadcrumbs";
 
 export const revalidate = 3600;
 
-export const metadata = {
-  title: "AI Courses for Freelancers & Solo Entrepreneurs",
-  description:
-    "Browse Ropes' AI course tracks — agentic AI, LangChain, n8n automation, MLOps, cloud AI, and more — guided paths from working professional to independent AI freelancer or solo entrepreneur.",
-};
+export const metadata = pageMetadata({ title: "Practical AI Courses for Professional & Independent Work", description: "Compare Ropes courses by capability, curriculum, hands-on builds, portfolio evidence, and professional application—from no-code automation to agent engineering, data, testing, security, and AI operations.", path: "/courses" });
 
 export default async function CoursesPage() {
   const supabase = supabaseAdmin();
   const { data } = await supabase.from("courses").select("*").order("price", { ascending: true });
   const courses = (data ?? []) as CourseRow[];
+  const courseListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: courses.map((course, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: `${SITE_URL}/courses/${course.slug}`,
+      item: {
+        "@type": "Course",
+        name: course.title,
+        description: course.description,
+        provider: { "@type": "EducationalOrganization", name: "Ropes", sameAs: SITE_URL },
+      },
+    })),
+  };
+  const breadcrumb = breadcrumbJsonLd([{ name: "Home", path: "/" }, { name: "Courses", path: "/courses" }]);
 
   return (
     <Section className="bg-ink-50">
       <Container>
+        {[courseListJsonLd, breadcrumb].map((item, index) => <script key={index} type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(item) }} />)}
+        <MarketingBreadcrumbs items={[{ label: "Home", href: "/" }, { label: "Courses" }]} />
         <div className="mb-12 max-w-3xl">
           <span className="text-micro font-semibold uppercase tracking-wide text-accent-600">Choose by outcome</span>
           <h1 className="mt-2 font-heading text-h1 font-bold">Course tracks</h1>

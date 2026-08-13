@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { ContactForm } from "@/components/marketing/contact-form";
 import { WHATSAPP_LINK } from "@/lib/constants";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata({ title: "Contact Ropes", description: "Ask Ropes about course fit, your professional background, the learning experience, enrollment, or support.", path: "/contact" });
 
 export default function ContactPage() {
   return (

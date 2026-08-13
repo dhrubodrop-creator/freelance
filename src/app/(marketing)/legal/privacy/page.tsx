@@ -1,8 +1,7 @@
 import { Container, Section } from "@/components/shared/container";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Privacy Policy",
-};
+export const metadata = pageMetadata({ title: "Privacy Policy", description: "How Ropes handles account, profile, course, payment, support, and platform usage data.", path: "/legal/privacy" });
 
 export default function PrivacyPage() {
   return (

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowRight, CheckCircle2, Lock } from "lucide-react";
+import { ArrowRight, CheckCircle2, FileCheck2, Lock, Target } from "lucide-react";
 
 import { Container, Section } from "@/components/shared/container";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,6 +16,9 @@ import { EarningsChart } from "@/components/marketing/earnings-chart";
 import { IndustrySnapshot } from "@/components/marketing/industry-snapshot";
 import { getIndustryData } from "@/lib/industry-data";
 import type { CourseRow, ModuleRow } from "@/types/db";
+import { getCourseDiscovery } from "@/lib/course-discovery";
+import { breadcrumbJsonLd, pageMetadata, safeJsonLd, SITE_URL } from "@/lib/seo";
+import { MarketingBreadcrumbs } from "@/components/marketing/marketing-breadcrumbs";
 
 export const revalidate = 3600;
 
@@ -32,16 +35,9 @@ export async function generateMetadata({ params }: Props) {
   if (!course) return { title: "Course" };
 
   const title = `${course.title} — AI Course for Freelancers & Solo Entrepreneurs`;
-  const description = course.description
-    ? `${course.description} A Ropes AI course for freelancers and solo entrepreneurs — AI-mentored, project-based, client-ready.`
-    : undefined;
+  const description = course.description ?? `${course.title} course from Ropes.`;
 
-  return {
-    title,
-    description,
-    openGraph: { title, description },
-    twitter: { title, description },
-  };
+  return pageMetadata({ title, description, path: `/courses/${params.slug}` });
 }
 
 export default async function CourseDetailPage({ params }: Props) {
@@ -61,13 +57,15 @@ export default async function CourseDetailPage({ params }: Props) {
   const modules = (moduleData ?? []) as ModuleRow[];
   const discountedPrice = getDiscountedPrice(Number(course.price), course.slug);
   const industryData = getIndustryData(course.slug);
+  const discovery = getCourseDiscovery(course.track, course.slug);
 
   const courseJsonLd = {
     "@context": "https://schema.org",
     "@type": "Course",
     name: course.title,
     description: course.description ?? undefined,
-    provider: { "@type": "EducationalOrganization", name: "Ropes", sameAs: process.env.NEXT_PUBLIC_SITE_URL },
+    url: `${SITE_URL}/courses/${course.slug}`,
+    provider: { "@type": "EducationalOrganization", name: "Ropes", sameAs: SITE_URL },
     audience: { "@type": "Audience", audienceType: "Freelancers, solo entrepreneurs, working professionals" },
     offers: {
       "@type": "Offer",
@@ -82,17 +80,24 @@ export default async function CourseDetailPage({ params }: Props) {
       courseWorkload: `P${modules.length}W`,
     },
   };
+  const breadcrumb = breadcrumbJsonLd([
+    { name: "Home", path: "/" },
+    { name: "Courses", path: "/courses" },
+    { name: course.title, path: `/courses/${course.slug}` },
+  ]);
 
   return (
     <div>
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(courseJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(courseJsonLd) }}
       />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumb) }} />
       <Section className="bg-primary bg-mesh-hero bg-noise pb-14 text-primary-foreground">
         <Container className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div className="flex flex-col gap-5">
+            <MarketingBreadcrumbs items={[{ label: "Home", href: "/" }, { label: "Courses", href: "/courses" }, { label: course.title }]} />
             {course.track && (
               <Badge variant="accent" className="w-fit capitalize">
                 {course.track.replace(/-/g, " ")}
@@ -123,15 +128,31 @@ export default async function CourseDetailPage({ params }: Props) {
       </Section>
 
       <Section>
+        <Container>
+          <div className="grid gap-5 md:grid-cols-3">
+            <Card><CardContent className="pt-6"><Target className="mb-3 size-5 text-accent-600" /><h2 className="font-heading text-lg font-semibold">Who should take this?</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">{discovery.audience}</p></CardContent></Card>
+            <Card><CardContent className="pt-6"><CheckCircle2 className="mb-3 size-5 text-success" /><h2 className="font-heading text-lg font-semibold">Capability developed</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">{discovery.capability}</p></CardContent></Card>
+            <Card><CardContent className="pt-6"><FileCheck2 className="mb-3 size-5 text-primary" /><h2 className="font-heading text-lg font-semibold">Professional application</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">{discovery.application}</p></CardContent></Card>
+          </div>
+        </Container>
+      </Section>
+
+      <Section className="bg-muted/40">
         <Container className="grid gap-12 lg:grid-cols-[1.3fr_1fr]">
           {modules.length > 0 && <div>
             <h2 className="mb-5 font-heading text-h3 font-bold">What&rsquo;s inside this track</h2>
             <ul className="flex flex-col gap-3">
               {modules.map((module, i) => (
-                <li key={module.id} className="flex items-center gap-4 rounded-lg border border-border bg-card px-4 py-3.5">
+                <li key={module.id} className="rounded-lg border border-border bg-card px-4 py-4">
+                  <div className="flex items-center gap-4">
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary-50 text-sm font-semibold text-primary-700">{i + 1}</span>
                   <span className="flex-1 text-sm font-medium">{module.title}</span>
                   <Lock className="size-4 shrink-0 text-muted-foreground" />
+                  </div>
+                  {(module.build_deliverable || module.outcome) && <div className="ml-12 mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                    {module.build_deliverable && <p className="text-muted-foreground"><strong className="text-foreground">Build:</strong> {module.build_deliverable}</p>}
+                    {module.outcome && <p className="text-muted-foreground"><strong className="text-foreground">Evidence:</strong> {module.outcome}</p>}
+                  </div>}
                 </li>
               ))}
             </ul>
@@ -151,6 +172,13 @@ export default async function CourseDetailPage({ params }: Props) {
               </div>
             ))}
           </div>
+        </Container>
+      </Section>
+
+      <Section>
+        <Container className="flex flex-col items-start justify-between gap-5 md:flex-row md:items-center">
+          <div><h2 className="font-heading text-h3 font-bold">Connect this course to practical work</h2><p className="mt-2 max-w-2xl text-muted-foreground">See how Ropes links a skill to a business problem, portfolio proof, a bounded service, and responsible client delivery. No client or income outcome is guaranteed.</p></div>
+          <div className="flex flex-wrap gap-3">{discovery.skillSlug && <Button asChild variant="outline"><Link href={`/resources/skills/${discovery.skillSlug}`}>Understand the skill</Link></Button>}<Button asChild variant="accent"><Link href="/turn-skills-into-freelance-services">See the service pathway <ArrowRight className="size-4" /></Link></Button></div>
         </Container>
       </Section>
 

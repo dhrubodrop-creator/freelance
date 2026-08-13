@@ -10,8 +10,10 @@ import { PriceTag } from "@/components/shared/price-tag";
 import { getCourseVisual } from "@/components/marketing/course-visual";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { CaseStudyRow, CourseRow } from "@/types/db";
+import { pageMetadata } from "@/lib/seo";
 
 export const revalidate = 3600;
+export const metadata = pageMetadata({ title: "Turn Professional Skills Into AI-Powered Work", description: "Ropes helps working professionals combine existing expertise with practical AI systems, project evidence, and client-ready delivery for freelance, consulting, and independent work.", path: "/" });
 
 export default async function HomePage() {
   const supabase = supabaseAdmin();
@@ -49,7 +51,7 @@ export default async function HomePage() {
           <div className="relative z-10 flex flex-col items-start gap-7">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-micro font-semibold uppercase tracking-wide text-white/80 backdrop-blur-sm">
               <Sparkles className="size-3.5 text-accent" />
-              AI no-code training for working professionals
+              Existing expertise + practical AI systems
             </span>
 
             <h1 className="max-w-3xl text-balance font-heading text-display-lg font-bold">
@@ -59,8 +61,8 @@ export default async function HomePage() {
             </h1>
 
             <p className="max-w-xl text-balance text-body-lg text-white/75">
-              Learn practical AI no-code systems, turn them into client-ready work, and create your
-              path to independence—without leaving your experience behind.
+              Combine what you already know with AI, build client-ready systems, create portfolio
+              evidence, and develop a path toward freelance, consulting, or independent work.
             </p>
 
             <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
@@ -100,15 +102,14 @@ export default async function HomePage() {
               The skill gap isn&rsquo;t talent. It&rsquo;s a guided starting point.
             </h2>
             <p className="max-w-lg text-muted-foreground">
-              AI and no-code tools have made it possible to build real, working systems — outreach
-              agents, automations, internal tools — without a software engineering background. What&rsquo;s
-              missing for most working professionals isn&rsquo;t capability, it&rsquo;s a structured path: what
-              to learn first, what to build, and how to package that into something a client will pay
-              for.
+              Your experience in sales, marketing, operations, finance, HR, consulting, data, product,
+              software, or another professional function is not something to discard. It gives you the
+              context to recognise a useful problem and judge whether a solution actually works.
             </p>
             <p className="max-w-lg text-muted-foreground">
-              Ropes is that path. Each track pairs hands-on modules with an AI mentor and templates
-              pulled from real client work, so you&rsquo;re never starting from a blank page.
+              Ropes adds structured AI learning, hands-on systems, project evidence, and professional
+              application. The goal is not to collect generic tool knowledge; it is to develop a
+              capability you can explain, demonstrate, and apply responsibly.
             </p>
           </div>
 
@@ -133,6 +134,28 @@ export default async function HomePage() {
                 <p className="font-heading text-sm font-semibold">Package client value</p>
               </div>
             </div>
+          </div>
+        </Container>
+      </Section>
+
+      <Section className="bg-primary text-primary-foreground">
+        <Container>
+          <div className="max-w-3xl">
+            <span className="text-micro font-semibold uppercase tracking-wide text-accent">The public Ropes journey</span>
+            <h2 className="mt-3 font-heading text-h2 font-bold">From existing skill to practical application</h2>
+            <p className="mt-3 text-white/70">A course is one part of the journey. The useful sequence connects your context to a system, evidence, and a clearly bounded professional application.</p>
+          </div>
+          <ol className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+            {["Your expertise", "AI leverage", "Working system", "Project proof", "Defined service", "Market application"].map((item, index) => (
+              <li key={item} className="rounded-xl border border-white/15 bg-white/5 p-4">
+                <span className="text-xs font-bold text-accent">0{index + 1}</span>
+                <p className="mt-2 font-heading text-sm font-semibold">{item}</p>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Button asChild variant="accent"><Link href="/turn-skills-into-freelance-services">See how the path works <ArrowRight className="size-4" /></Link></Button>
+            <Button asChild variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"><Link href="/for-professionals">Find your professional pathway</Link></Button>
           </div>
         </Container>
       </Section>

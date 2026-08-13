@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Sora, Inter, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
+import { safeJsonLd, SITE_URL } from "@/lib/seo";
 import "./globals.css";
 
 const heading = Sora({
@@ -23,16 +24,14 @@ const mono = JetBrains_Mono({
   display: "swap",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Ropes — AI Courses for Freelancers & Solo Entrepreneurs | Learn the Ropes, Go Independent",
-    template: "%s · Ropes — AI Courses for Freelancers",
+    default: "Ropes — Turn Professional Skills Into AI-Powered Work",
+    template: "%s · Ropes",
   },
   description:
-    "Ropes teaches working professionals how to build AI no-code systems — agentic AI, LangChain, n8n automation, MLOps, and more — and turn that skill into freelance or solo-entrepreneur income. AI-matched path, AI mentor, real client-ready projects.",
+    "Ropes helps working professionals combine existing expertise with AI systems, practical projects, portfolio evidence, and client-ready delivery for freelance, consulting, and independent work.",
   keywords: [
     "AI course for freelancers",
     "AI course for solo entrepreneurs",
@@ -47,21 +46,23 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Ropes" }],
   category: "education",
-  alternates: { canonical: SITE_URL },
+  alternates: { canonical: "/" },
   openGraph: {
-    title: "Ropes — AI Courses for Freelancers & Solo Entrepreneurs",
+    title: "Ropes — Turn Professional Skills Into AI-Powered Work",
     description:
-      "A guided, AI-mentored path from working professional to independent AI freelancer — agentic AI, automation, and client-ready projects.",
+      "Build practical AI systems, create portfolio evidence, and connect your existing professional expertise to client-ready work.",
     siteName: "Ropes",
     type: "website",
     url: SITE_URL,
     locale: "en_IN",
+    images: [{ url: `${SITE_URL}/images/ropes/hero-independent.webp`, alt: "A professional building an AI workflow for practical client work" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ropes — AI Courses for Freelancers & Solo Entrepreneurs",
+    title: "Ropes — Turn Professional Skills Into AI-Powered Work",
     description:
-      "Learn AI no-code systems and go independent — agentic AI, automation, and an AI mentor guiding every step.",
+      "Combine professional expertise with AI systems, practical builds, portfolio evidence, and client-ready delivery.",
+    images: [`${SITE_URL}/images/ropes/hero-independent.webp`],
   },
   robots: {
     index: true,
@@ -77,16 +78,24 @@ const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "EducationalOrganization",
   name: "Ropes",
-  description:
-    "Ropes teaches working professionals to build AI no-code systems and go independent as freelancers and solo entrepreneurs.",
+  description: "Ropes helps working professionals combine existing expertise with AI systems, practical builds, portfolio evidence, and professional application.",
   url: SITE_URL,
   logo: `${SITE_URL}/favicon.ico`,
-  sameAs: [],
   areaServed: "IN",
   audience: {
     "@type": "Audience",
     audienceType: "Freelancers, solo entrepreneurs, working professionals",
   },
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Ropes",
+  alternateName: ["Ropes AI", "Ropes.buzz"],
+  url: SITE_URL,
+  inLanguage: "en-IN",
+  publisher: { "@type": "EducationalOrganization", name: "Ropes", url: SITE_URL },
 };
 
 export const viewport: Viewport = {
@@ -108,8 +117,9 @@ export default function RootLayout({
           <script
             type="application/ld+json"
             // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+            dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationJsonLd) }}
           />
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteJsonLd) }} />
         </head>
         <body className="min-h-screen bg-background font-sans text-foreground">
           {children}
