@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { computeProfileCompletion } from "@/lib/profile-completion";
 import { computeSkillGap } from "@/lib/skill-gap";
+import { computeMasteryForSkills, loadUserMasterySourceData } from "@/lib/mastery";
 import { computeReadinessScore, generateMonetisationPlan } from "@/lib/monetisation";
 import { logEvent } from "@/lib/analytics";
 import { createNotification } from "@/lib/notifications";
@@ -43,6 +44,15 @@ export async function POST() {
   const userSkills = (userSkillRows ?? []) as unknown as { skill_id: string; skills: SkillRow | null }[];
   const skillNames = userSkills.map((us) => us.skills?.name).filter((n): n is string => Boolean(n));
   const userSkillIds = new Set(userSkills.map((us) => us.skill_id));
+
+  const { data: allSkillRows } = await supabase.from("skills").select("id, name");
+  const masteryData = await loadUserMasterySourceData(user.id);
+  const mastery = computeMasteryForSkills((allSkillRows ?? []).map((s) => s.id), masteryData);
+  const skillNameById = new Map(((allSkillRows ?? []) as { id: string; name: string }[]).map((s) => [s.id, s.name]));
+  const verifiedSkillNames = mastery
+    .filter((m) => m.level === "demonstrated" || m.level === "strong")
+    .map((m) => skillNameById.get(m.skillId))
+    .filter((n): n is string => Boolean(n));
   const portfolioTitles = (portfolioRows ?? []).map((p) => p.title as string);
   const recommendedTrack =
     ((recommendationRow as unknown as { course: CourseRow | null } | null)?.course?.track) ?? null;
@@ -64,6 +74,7 @@ export async function POST() {
   const completion = computeProfileCompletion(profile, (educationRows?.length ?? 0) > 0, (experienceRows?.length ?? 0) > 0);
   const readiness = computeReadinessScore({
     skillsCount: skillNames.length,
+    verifiedSkillsCount: verifiedSkillNames.length,
     portfolioCount: portfolioTitles.length,
     profileCompletionPercent: completion.percent,
     hasIncomeGoal: profile?.income_goal_inr != null,
@@ -79,9 +90,11 @@ export async function POST() {
       work_preference: profile?.work_preference ?? null,
     },
     skillNames,
+    verifiedSkillNames,
     portfolioTitles,
     recommendedTrack,
     skillGapMissing,
+    userId: user.id,
   });
 
   const { data: planRow, error: planError } = await supabase

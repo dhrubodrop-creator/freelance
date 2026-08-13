@@ -23,7 +23,7 @@ export async function POST() {
     return NextResponse.json({ error: "Complete your profile first" }, { status: 400 });
   }
 
-  const recommendation = await generateRecommendation(profile);
+  const recommendation = await generateRecommendation(profile, user.id);
 
   const { data: inserted } = await supabase
     .from("recommendations")

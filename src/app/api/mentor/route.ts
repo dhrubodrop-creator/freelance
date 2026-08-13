@@ -8,6 +8,9 @@ import { answerMentorQuestion, isRateLimited } from "@/lib/mentor";
 const bodySchema = z.object({
   message: z.string().min(1).max(2000),
   courseId: z.string().uuid().nullable().optional(),
+  mode: z
+    .enum(["explain", "hint", "socratic", "debug", "review", "challenge", "interview", "career", "next_step"])
+    .optional(),
 });
 
 export async function POST(req: Request) {
@@ -37,7 +40,15 @@ export async function POST(req: Request) {
     content: parsed.data.message,
   });
 
-  const reply = await answerMentorQuestion({ userId: user.id, courseId, message: parsed.data.message });
+  const { data: profile } = await supabase.from("profiles").select("career_goal").eq("user_id", user.id).maybeSingle();
+
+  const reply = await answerMentorQuestion({
+    userId: user.id,
+    courseId,
+    message: parsed.data.message,
+    mode: parsed.data.mode,
+    careerGoal: profile?.career_goal ?? null,
+  });
 
   await supabase.from("mentor_messages").insert({
     user_id: user.id,

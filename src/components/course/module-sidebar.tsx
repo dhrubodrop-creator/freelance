@@ -5,18 +5,28 @@ import { usePathname } from "next/navigation";
 import { CheckCircle2, Circle, Lock } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import type { ModuleRow } from "@/types/db";
+import { Badge } from "@/components/ui/badge";
+import type { ModuleGuidance, ModuleRow } from "@/types/db";
+
+const GUIDANCE_LABEL: Record<ModuleGuidance["depth"], string> = {
+  review: "Review",
+  full: "",
+  foundation_plus_practice: "Foundation+",
+  advanced_challenge: "Challenge",
+};
 
 export function ModuleSidebar({
   courseSlug,
   modules,
   unlockedIds,
   completedIds,
+  guidance,
 }: {
   courseSlug: string;
   modules: ModuleRow[];
   unlockedIds: Set<string>;
   completedIds: Set<string>;
+  guidance?: Record<string, ModuleGuidance>;
 }) {
   const pathname = usePathname();
 
@@ -27,6 +37,8 @@ export function ModuleSidebar({
         const completed = completedIds.has(module.id);
         const href = `/courses/${courseSlug}/learn/${module.id}`;
         const active = pathname === href;
+        const moduleGuidance = guidance?.[module.id];
+        const guidanceLabel = moduleGuidance ? GUIDANCE_LABEL[moduleGuidance.depth] : "";
 
         const content = (
           <span
@@ -47,6 +59,11 @@ export function ModuleSidebar({
             <span className="flex-1">
               {i + 1}. {module.title}
             </span>
+            {guidanceLabel && (
+              <Badge variant="outline" className="shrink-0 px-1.5 py-0 text-[10px] font-medium">
+                {guidanceLabel}
+              </Badge>
+            )}
           </span>
         );
 

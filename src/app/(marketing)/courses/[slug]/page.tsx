@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowRight, CheckCircle2, FileCheck2, Lock, Target } from "lucide-react";
+import { ArrowRight, Award, CheckCircle2, Compass, FileCheck2, GraduationCap, Lock, Sparkles, Target } from "lucide-react";
 
 import { Container, Section } from "@/components/shared/container";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,7 +17,7 @@ import { IndustrySnapshot } from "@/components/marketing/industry-snapshot";
 import { getIndustryData } from "@/lib/industry-data";
 import type { CourseRow, ModuleRow } from "@/types/db";
 import { getCourseDiscovery } from "@/lib/course-discovery";
-import { breadcrumbJsonLd, pageMetadata, safeJsonLd, SITE_URL } from "@/lib/seo";
+import { breadcrumbJsonLd, ORGANIZATION_ID, pageMetadata, safeJsonLd, SITE_URL } from "@/lib/seo";
 import { MarketingBreadcrumbs } from "@/components/marketing/marketing-breadcrumbs";
 
 export const revalidate = 3600;
@@ -58,6 +58,11 @@ export default async function CourseDetailPage({ params }: Props) {
   const discountedPrice = getDiscountedPrice(Number(course.price), course.slug);
   const industryData = getIndustryData(course.slug);
   const discovery = getCourseDiscovery(course.track, course.slug);
+  const { data: capstoneData } = await supabase
+    .from("course_capstones")
+    .select("title, brief")
+    .eq("course_id", course.id)
+    .maybeSingle();
 
   const courseJsonLd = {
     "@context": "https://schema.org",
@@ -65,7 +70,7 @@ export default async function CourseDetailPage({ params }: Props) {
     name: course.title,
     description: course.description ?? undefined,
     url: `${SITE_URL}/courses/${course.slug}`,
-    provider: { "@type": "EducationalOrganization", name: "Ropes", sameAs: SITE_URL },
+    provider: { "@type": "EducationalOrganization", "@id": ORGANIZATION_ID, name: "Ropes", url: SITE_URL },
     audience: { "@type": "Audience", audienceType: "Freelancers, solo entrepreneurs, working professionals" },
     offers: {
       "@type": "Offer",
@@ -171,6 +176,71 @@ export default async function CourseDetailPage({ params }: Props) {
                 <span>{item}</span>
               </div>
             ))}
+          </div>
+        </Container>
+      </Section>
+
+      <Section>
+        <Container>
+          <h2 className="mb-2 font-heading text-h3 font-bold">What you&rsquo;ll prove — and own — by the end</h2>
+          <p className="mb-6 max-w-2xl text-muted-foreground">
+            Completion isn&rsquo;t the finish line. This is what turns the course into evidence you can
+            actually use.
+          </p>
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardContent className="pt-6">
+                <Compass className="mb-3 size-5 text-accent-600" />
+                <h3 className="font-heading text-base font-semibold">Personalised from day one</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  A short entry diagnostic flags which modules to move through quickly and which to slow
+                  down on — the full curriculum stays available either way.
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <Sparkles className="mb-3 size-5 text-accent-600" />
+                <h3 className="font-heading text-base font-semibold">Evidence, not checkmarks</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Skills track through a real mastery ladder — module completed, exercise practiced,
+                  project shipped — not just &ldquo;lesson viewed.&rdquo;
+                </p>
+              </CardContent>
+            </Card>
+            {capstoneData ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <GraduationCap className="mb-3 size-5 text-accent-600" />
+                  <h3 className="font-heading text-base font-semibold">A real capstone, AI-defended</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{capstoneData.title} — submit
+                    real work, defend your decisions to an AI interviewer, get scored feedback across
+                    multiple dimensions.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="pt-6">
+                  <GraduationCap className="mb-3 size-5 text-accent-600" />
+                  <h3 className="font-heading text-base font-semibold">Project workspace built in</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                    Log the decisions behind what you build — the reasoning becomes interview-ready proof,
+                    not just a finished artifact.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+            <Card>
+              <CardContent className="pt-6">
+                <Award className="mb-3 size-5 text-accent-600" />
+                <h3 className="font-heading text-base font-semibold">A portfolio you can use today</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  Turn a finished project into a case study, resume bullets, and an interview story —
+                  drafted from your real work, yours to review before you use it anywhere.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </Container>
       </Section>

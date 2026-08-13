@@ -13,6 +13,7 @@ import {
   Radio,
   FileText,
   ShieldCheck,
+  Cpu,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ const ADMIN_NAV = [
   { href: "/admin/leads", label: "Leads", icon: Users },
   { href: "/admin/support", label: "Support", icon: LifeBuoy },
   { href: "/admin/audit-logs", label: "Audit logs", icon: ShieldCheck },
+  { href: "/admin/ai-usage", label: "AI usage", icon: Cpu },
 ];
 
 export function AdminNav() {

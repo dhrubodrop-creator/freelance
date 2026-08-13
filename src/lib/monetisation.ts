@@ -1,6 +1,6 @@
 import "server-only";
 
-import { cerebras, CEREBRAS_MODEL } from "@/lib/cerebras";
+import { callAI } from "@/lib/ai/router";
 import type { ProfileRow, SuggestedMonetisationPath } from "@/types/db";
 
 export interface ReadinessScoreBreakdown {
@@ -17,15 +17,24 @@ export interface ReadinessScoreBreakdown {
  * portfolio/proof (30 max — weighted highest, since proof is what actually
  * makes a monetisation path credible), profile completeness (25 max), and
  * stated goals (20 max).
+ *
+ * `verifiedSkillsCount` (mastery level DEMONSTRATED/STRONG from
+ * src/lib/mastery.ts — real evidence: a completed module + practiced
+ * exercise + portfolio proof, not a self-rating) is optional and, when
+ * higher than the learner's self-reported skill count, is used instead.
+ * Evidence is strictly more credible than a claim, so it can only raise this
+ * component, never lower it below what the learner already self-reported.
  */
 export function computeReadinessScore(input: {
   skillsCount: number;
+  verifiedSkillsCount?: number;
   portfolioCount: number;
   profileCompletionPercent: number;
   hasIncomeGoal: boolean;
   hasWorkPreference: boolean;
 }): ReadinessScoreBreakdown {
-  const skillsPoints = Math.round(Math.min(input.skillsCount / 5, 1) * 25);
+  const effectiveSkillsCount = Math.max(input.skillsCount, input.verifiedSkillsCount ?? 0);
+  const skillsPoints = Math.round(Math.min(effectiveSkillsCount / 5, 1) * 25);
   const portfolioPoints = Math.round(Math.min(input.portfolioCount / 2, 1) * 30);
   const profilePoints = Math.round((input.profileCompletionPercent / 100) * 25);
   const goalsPoints = (input.hasIncomeGoal ? 10 : 0) + (input.hasWorkPreference ? 10 : 0);
@@ -48,9 +57,15 @@ export interface MonetisationPlanResult {
 const SYSTEM_PROMPT = `You are the monetisation-planning engine for Ropes, a platform that helps working
 professionals turn AI/no-code skills into freelance or solo-entrepreneur income.
 
-You will be given a student's profile, the skills they've added to their profile, their portfolio
-project titles, and — if available — the skills their recommended course track still expects them
-to build (their "skill gap").
+You will be given a student's profile, the skills they've self-added to their profile, which of those
+(or others) they have real EVIDENCE for (a completed module + a practiced exercise + an actual
+portfolio project — not just a claim), their portfolio project titles, and — if available — the
+skills their recommended course track still expects them to build (their "skill gap").
+
+Weight evidence-backed skills higher than self-reported-only skills when reasoning about what a
+learner can credibly offer a client today — a self-rating with no evidence behind it is a weaker
+signal than a skill they've actually shipped a project with. When a suggested path's "skillsPresent"
+includes a skill that has real evidence, say so explicitly (e.g. "with a shipped project to back it up").
 
 Generate a personalised, honest monetisation plan. Use language like "based on your profile",
 "potential", "suggested" — never promise a specific income or guarantee a job/client. Only recommend
@@ -104,36 +119,41 @@ function fallbackPlan(careerGoal: string | null): MonetisationPlanResult {
 export async function generateMonetisationPlan(input: {
   profile: Pick<ProfileRow, "occupation" | "industry" | "career_goal" | "income_goal_inr" | "work_preference">;
   skillNames: string[];
+  verifiedSkillNames: string[];
   portfolioTitles: string[];
   recommendedTrack: string | null;
   skillGapMissing: string[];
+  userId?: string | null;
 }): Promise<MonetisationPlanResult> {
-  try {
-    const completion = await cerebras.chat.completions.create({
-      model: CEREBRAS_MODEL,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: JSON.stringify({
-            profile: input.profile,
-            skills: input.skillNames,
-            portfolioProjects: input.portfolioTitles,
-            recommendedTrack: input.recommendedTrack,
-            skillGapForRecommendedTrack: input.skillGapMissing,
-          }),
-        },
-      ],
-      temperature: 0.5,
-    });
+  const result = await callAI({
+    task: "monetisation_planning",
+    userId: input.userId ?? null,
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      {
+        role: "user",
+        content: JSON.stringify({
+          profile: input.profile,
+          skills: input.skillNames,
+          evidenceBackedSkills: input.verifiedSkillNames,
+          portfolioProjects: input.portfolioTitles,
+          recommendedTrack: input.recommendedTrack,
+          skillGapForRecommendedTrack: input.skillGapMissing,
+        }),
+      },
+    ],
+  });
 
-    const raw = completion.choices[0]?.message?.content ?? "";
-    const parsed = JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)) as MonetisationPlanResult;
-    if (!parsed.summary || !Array.isArray(parsed.suggestedPaths) || !Array.isArray(parsed.weeklyActions)) {
-      throw new Error("Malformed AI response");
+  if (result) {
+    try {
+      const raw = result.content;
+      const parsed = JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)) as MonetisationPlanResult;
+      if (parsed.summary && Array.isArray(parsed.suggestedPaths) && Array.isArray(parsed.weeklyActions)) {
+        return parsed;
+      }
+    } catch {
+      // fall through to deterministic fallback below
     }
-    return parsed;
-  } catch {
-    return fallbackPlan(input.profile.career_goal);
   }
+  return fallbackPlan(input.profile.career_goal);
 }

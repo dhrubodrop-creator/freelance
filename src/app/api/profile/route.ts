@@ -81,13 +81,16 @@ export async function POST(req: Request) {
   await supabase.from("users").update({ profile_completed: true }).eq("id", user.id);
   await logEvent(user.id, "onboarding_completed", { industry, careerGoal });
 
-  const recommendation = await generateRecommendation({
-    occupation,
-    years_experience: yearsExperience,
-    industry,
-    career_goal: careerGoal,
-    hours_per_week: hoursPerWeek,
-  });
+  const recommendation = await generateRecommendation(
+    {
+      occupation,
+      years_experience: yearsExperience,
+      industry,
+      career_goal: careerGoal,
+      hours_per_week: hoursPerWeek,
+    },
+    user.id
+  );
 
   await supabase.from("recommendations").insert({
     user_id: user.id,

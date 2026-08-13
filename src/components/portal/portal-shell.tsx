@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
-import { LayoutDashboard, Users, LifeBuoy, ShieldCheck, Menu, CalendarClock, UserCircle, Sparkles, FolderGit2, LineChart, Briefcase } from "lucide-react";
+import { LayoutDashboard, Users, LifeBuoy, ShieldCheck, Menu, CalendarClock, UserCircle, Sparkles, FolderGit2, LineChart, Briefcase, Award } from "lucide-react";
 import { useState } from "react";
 
 import { Logo } from "@/components/shared/logo";
@@ -17,6 +17,7 @@ const NAV = [
   { href: "/profile", label: "My Profile", icon: UserCircle },
   { href: "/skills", label: "My Skills", icon: Sparkles },
   { href: "/portfolio", label: "Portfolio", icon: FolderGit2 },
+  { href: "/proof", label: "Proof Profile", icon: Award },
   { href: "/market-pulse", label: "Market Pulse", icon: LineChart },
   { href: "/opportunities", label: "Opportunities", icon: Briefcase },
   { href: "/sessions", label: "1:1 Sessions", icon: CalendarClock },

@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { FileText, FolderDown, CheckCircle2, Hammer, Target, Sparkles } from "lucide-react";
+import { FileText, FolderDown, CheckCircle2, Hammer, Target, Sparkles, Compass } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/current-user";
 import {
@@ -21,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type {
+  CourseDiagnosticRow,
   ExerciseRow,
   ModulePlaybookSectionRow,
   InterviewQuestionRow,
@@ -65,6 +67,7 @@ export default async function ModulePage({
     { data: exercisesData },
     { data: interviewQuestionsData },
     { data: moduleSkillLinks },
+    { data: diagnosticData },
   ] = await Promise.all([
     supabase.from("templates").select("*").eq("module_id", activeModule.id),
     supabase.from("playbooks").select("*").eq("course_id", course.id),
@@ -72,7 +75,20 @@ export default async function ModulePage({
     supabase.from("exercises").select("*").eq("module_id", activeModule.id).order("order_index"),
     supabase.from("interview_questions").select("*").eq("module_id", activeModule.id).order("order_index"),
     supabase.from("module_skills").select("skill_id, skills(*)").eq("module_id", activeModule.id),
+    supabase.from("course_diagnostics").select("*").eq("user_id", user.id).eq("course_id", course.id).maybeSingle(),
   ]);
+  const diagnostic = diagnosticData as CourseDiagnosticRow | null;
+  const activeGuidance = diagnostic?.module_guidance?.[activeModule.id] ?? null;
+  const exercisesForModule = (exercisesData ?? []) as ExerciseRow[];
+  const { data: exerciseCompletionRows } =
+    exercisesForModule.length > 0
+      ? await supabase
+          .from("exercise_completions")
+          .select("exercise_id")
+          .eq("user_id", user.id)
+          .in("exercise_id", exercisesForModule.map((e) => e.id))
+      : { data: [] };
+  const completedExerciseIds = new Set((exerciseCompletionRows ?? []).map((r) => r.exercise_id as string));
   const templates = (templateData ?? []) as TemplateRow[];
   const playbooks = (playbookData ?? []) as PlaybookRow[];
   const playbookSections = (playbookSectionsData ?? []) as ModulePlaybookSectionRow[];
@@ -91,6 +107,49 @@ export default async function ModulePage({
 
   const overviewContent = (
     <div className="flex flex-col gap-6">
+      {!diagnostic && (
+        <Card className="border-accent/30 bg-accent-50/40">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+            <div className="flex items-center gap-2.5 text-sm">
+              <Compass className="size-4 shrink-0 text-accent-600" />
+              <span>
+                Take the 2-minute diagnostic to see which modules you can move through quickly and which
+                deserve extra time.
+              </span>
+            </div>
+            <Link
+              href={`/courses/${slug}/learn/diagnostic`}
+              className="text-sm font-semibold text-accent-600 hover:underline"
+            >
+              Start diagnostic
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+      {diagnostic && activeIndex === 0 && (
+        <Card className="border-border bg-muted/40">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
+            <span>
+              <span className="font-medium">Your starting point: </span>
+              {diagnostic.starting_point}
+            </span>
+            <Link
+              href={`/courses/${slug}/learn/diagnostic`}
+              className="shrink-0 text-accent-600 hover:underline"
+            >
+              Retake
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+      {activeGuidance && activeGuidance.depth !== "full" && (
+        <Card className="border-primary-100 bg-primary-50/40">
+          <CardContent className="flex items-center gap-2.5 py-4 text-sm">
+            <Compass className="size-4 shrink-0 text-primary-700" />
+            <span>{activeGuidance.reason}</span>
+          </CardContent>
+        </Card>
+      )}
       {embedUrl && (
         <div className="aspect-video w-full overflow-hidden rounded-xl bg-ink-950 shadow-card">
           <iframe
@@ -217,6 +276,7 @@ export default async function ModulePage({
           modules={modules}
           unlockedIds={unlockedIds}
           completedIds={completedIds}
+          guidance={diagnostic?.module_guidance}
         />
       </aside>
 
@@ -244,7 +304,7 @@ export default async function ModulePage({
             )}
             {exercises.length > 0 && (
               <TabsContent value="practice">
-                <ExercisesTab exercises={exercises} />
+                <ExercisesTab exercises={exercises} completedIds={completedExerciseIds} />
               </TabsContent>
             )}
             {interviewQuestions.length > 0 && (

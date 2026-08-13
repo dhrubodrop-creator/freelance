@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Lightbulb, ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Lightbulb, ChevronDown, CheckCircle2, Loader2 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,15 +25,44 @@ const LEVEL_DESCRIPTION: Record<string, string> = {
   capstone: "A full end-to-end professional simulation.",
 };
 
-function ExerciseCard({ exercise }: { exercise: ExerciseRow }) {
+function ExerciseCard({
+  exercise,
+  completed,
+}: {
+  exercise: ExerciseRow;
+  completed: boolean;
+}) {
+  const router = useRouter();
   const [hintsShown, setHintsShown] = React.useState(0);
   const [solutionShown, setSolutionShown] = React.useState(false);
+  const [pending, setPending] = React.useState(false);
+
+  async function toggleComplete() {
+    setPending(true);
+    try {
+      const res = await fetch(`/api/exercises/${exercise.id}/complete`, {
+        method: completed ? "DELETE" : "POST",
+      });
+      if (!res.ok) throw new Error();
+      router.refresh();
+    } catch {
+      toast.error("Couldn't save that — try again.");
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
     <Card>
       <CardHeader>
         <div className="flex flex-wrap items-center gap-2">
           <Badge variant="accent">{LEVEL_LABEL[exercise.level] ?? exercise.level}</Badge>
+          {completed && (
+            <Badge variant="success" className="gap-1">
+              <CheckCircle2 className="size-3" />
+              Practiced
+            </Badge>
+          )}
         </div>
         <CardTitle className="text-base">{exercise.title}</CardTitle>
         <p className="text-micro text-muted-foreground">{LEVEL_DESCRIPTION[exercise.level]}</p>
@@ -88,12 +119,36 @@ function ExerciseCard({ exercise }: { exercise: ExerciseRow }) {
             )}
           </div>
         )}
+
+        <div>
+          <Button
+            type="button"
+            variant={completed ? "outline" : "accent"}
+            size="sm"
+            className="w-fit gap-1.5"
+            disabled={pending}
+            onClick={toggleComplete}
+          >
+            {pending ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <CheckCircle2 className="size-3.5" />
+            )}
+            {completed ? "Mark not practiced" : "Mark as practiced"}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-export function ExercisesTab({ exercises }: { exercises: ExerciseRow[] }) {
+export function ExercisesTab({
+  exercises,
+  completedIds = new Set(),
+}: {
+  exercises: ExerciseRow[];
+  completedIds?: Set<string>;
+}) {
   if (exercises.length === 0) {
     return <p className="py-8 text-center text-sm text-muted-foreground">No practice exercises for this module yet.</p>;
   }
@@ -101,7 +156,7 @@ export function ExercisesTab({ exercises }: { exercises: ExerciseRow[] }) {
   return (
     <div className="flex flex-col gap-4">
       {exercises.map((exercise) => (
-        <ExerciseCard key={exercise.id} exercise={exercise} />
+        <ExerciseCard key={exercise.id} exercise={exercise} completed={completedIds.has(exercise.id)} />
       ))}
     </div>
   );

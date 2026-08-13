@@ -1,6 +1,6 @@
 import "server-only";
 
-import { cerebras, CEREBRAS_MODEL } from "@/lib/cerebras";
+import { callAI } from "@/lib/ai/router";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { CourseRow, ProfileRow } from "@/types/db";
 
@@ -31,7 +31,8 @@ function fallbackTrack(profile: Pick<ProfileRow, "industry" | "occupation" | "ca
 }
 
 export async function generateRecommendation(
-  profile: Pick<ProfileRow, "occupation" | "years_experience" | "industry" | "career_goal" | "hours_per_week">
+  profile: Pick<ProfileRow, "occupation" | "years_experience" | "industry" | "career_goal" | "hours_per_week">,
+  userId?: string | null
 ): Promise<RecommendationResult> {
   const supabase = supabaseAdmin();
   const { data: courses } = await supabase
@@ -41,36 +42,40 @@ export async function generateRecommendation(
 
   const catalog = (courses ?? []) as CourseRow[];
 
-  try {
-    const completion = await cerebras.chat.completions.create({
-      model: CEREBRAS_MODEL,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: JSON.stringify({
-            student: profile,
-            catalog: catalog.map((c) => ({ track: c.track, title: c.title, description: c.description })),
-          }),
-        },
-      ],
-      temperature: 0.4,
-    });
+  const result = await callAI({
+    task: "recommendation",
+    userId: userId ?? null,
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      {
+        role: "user",
+        content: JSON.stringify({
+          student: profile,
+          catalog: catalog.map((c) => ({ track: c.track, title: c.title, description: c.description })),
+        }),
+      },
+    ],
+  });
 
-    const raw = completion.choices[0]?.message?.content ?? "";
-    const parsed = JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)) as {
-      track: string;
-      rationale: string;
-    };
-    const matched = catalog.find((c) => c.track === parsed.track) ?? catalog[0];
-    return { courseId: matched?.id ?? null, rationale: parsed.rationale };
-  } catch {
-    const track = fallbackTrack(profile);
-    const matched = catalog.find((c) => c.track === track) ?? catalog[0];
-    return {
-      courseId: matched?.id ?? null,
-      rationale:
-        "Based on what you shared, this track lines up best with your background and available hours. Your AI mentor will help fine-tune this once you start.",
-    };
+  if (result) {
+    try {
+      const raw = result.content;
+      const parsed = JSON.parse(raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1)) as {
+        track: string;
+        rationale: string;
+      };
+      const matched = catalog.find((c) => c.track === parsed.track) ?? catalog[0];
+      return { courseId: matched?.id ?? null, rationale: parsed.rationale };
+    } catch {
+      // fall through to deterministic fallback below
+    }
   }
+
+  const track = fallbackTrack(profile);
+  const matched = catalog.find((c) => c.track === track) ?? catalog[0];
+  return {
+    courseId: matched?.id ?? null,
+    rationale:
+      "Based on what you shared, this track lines up best with your background and available hours. Your AI mentor will help fine-tune this once you start.",
+  };
 }

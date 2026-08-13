@@ -3,6 +3,7 @@ import { ExternalLink, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/current-user";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { computeMasteryForSkills, loadUserMasterySourceData } from "@/lib/mastery";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { MarketSignalRow, SkillCategoryRow, SkillRow } from "@/types/db";
@@ -19,17 +20,30 @@ export default async function MarketPulsePage() {
   if (!user) redirect("/sign-in");
 
   const supabase = supabaseAdmin();
-  const [{ data: userSkillRows }, { data: allSkills }, { data: categories }, { data: signals }] = await Promise.all([
-    supabase.from("user_skills").select("skill_id").eq("user_id", user.id),
-    supabase.from("skills").select("*"),
-    supabase.from("skill_categories").select("*").order("name"),
-    supabase.from("market_signals").select("*").order("observed_at", { ascending: false }),
-  ]);
+  const [{ data: userSkillRows }, { data: allSkills }, { data: categories }, { data: signals }, masteryData] =
+    await Promise.all([
+      supabase.from("user_skills").select("skill_id").eq("user_id", user.id),
+      supabase.from("skills").select("*"),
+      supabase.from("skill_categories").select("*").order("name"),
+      supabase.from("market_signals").select("*").order("observed_at", { ascending: false }),
+      loadUserMasterySourceData(user.id),
+    ]);
 
-  const skillById = new Map(((allSkills ?? []) as SkillRow[]).map((s) => [s.id, s]));
+  const allSkillRows = (allSkills ?? []) as SkillRow[];
+  const skillById = new Map(allSkillRows.map((s) => [s.id, s]));
+
+  // Personalise on the union of self-reported skills AND skills with real
+  // evidence (a completed module, even if the learner never got around to
+  // self-rating it) — a learner shouldn't see the generic feed just because
+  // they haven't visited /skills yet when their course progress already
+  // says otherwise.
+  const mastery = computeMasteryForSkills(allSkillRows.map((s) => s.id), masteryData);
+  const evidenceSkillIds = new Set(
+    mastery.filter((m) => m.level !== "not_started").map((m) => m.skillId)
+  );
   const myCategoryIds = new Set(
-    (userSkillRows ?? [])
-      .map((us) => skillById.get(us.skill_id)?.category_id)
+    [...(userSkillRows ?? []).map((us) => us.skill_id), ...Array.from(evidenceSkillIds)]
+      .map((skillId) => skillById.get(skillId)?.category_id)
       .filter((id): id is string => Boolean(id))
   );
 
@@ -47,8 +61,8 @@ export default async function MarketPulsePage() {
         <h1 className="font-heading text-h2 font-bold">Market Pulse</h1>
         <p className="mt-1 text-muted-foreground">
           {personalised
-            ? `Signals relevant to your skills in ${myCategories.map((c) => c.name).join(", ")}.`
-            : "Add skills to your profile to see signals filtered to what's relevant to you — showing everything for now."}
+            ? `Signals relevant to your skills and course progress in ${myCategories.map((c) => c.name).join(", ")}.`
+            : "Add skills or make progress in a course to see signals filtered to what's relevant to you — showing everything for now."}
         </p>
       </div>
 

@@ -256,6 +256,124 @@ export interface InterviewQuestionRow {
   created_at: string;
 }
 
+export type DiagnosticExperienceLevel = "new" | "some_exposure" | "practiced" | "professional";
+export type DiagnosticSkillRating = "unfamiliar" | "aware" | "practiced" | "confident";
+export type ModuleGuidanceDepth = "review" | "full" | "foundation_plus_practice" | "advanced_challenge";
+
+export interface ModuleGuidance {
+  depth: ModuleGuidanceDepth;
+  reason: string;
+}
+
+export interface PortfolioCaseStudyRow {
+  id: string;
+  portfolio_item_id: string;
+  case_study: string;
+  short_version: string;
+  resume_bullets: string[];
+  interview_story: string;
+  approved: boolean;
+  generated_at: string;
+}
+
+export interface ProjectDecisionRow {
+  id: string;
+  portfolio_item_id: string;
+  decision: string;
+  alternatives: string | null;
+  reasoning: string;
+  tradeoff: string | null;
+  order_index: number;
+  created_at: string;
+}
+
+export interface CourseCapstoneRow {
+  id: string;
+  course_id: string;
+  title: string;
+  brief: string;
+  requirements: string[];
+  scoring_dimensions: string[];
+  created_at: string;
+}
+
+export type CapstoneSubmissionStatus =
+  | "in_progress"
+  | "awaiting_defence_answers"
+  | "submitted_for_review"
+  | "reviewed";
+
+export interface CapstoneSubmissionRow {
+  id: string;
+  user_id: string;
+  capstone_id: string;
+  portfolio_item_id: string;
+  status: CapstoneSubmissionStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DefenceQuestion {
+  question: string;
+  probes: string;
+}
+
+export interface DefenceAnswer {
+  question: string;
+  answer: string;
+}
+
+export interface DimensionScore {
+  score: number;
+  note: string;
+}
+
+export interface CapstoneReviewRow {
+  id: string;
+  submission_id: string;
+  defence_questions: DefenceQuestion[];
+  defence_answers: DefenceAnswer[];
+  dimension_scores: Record<string, DimensionScore>;
+  overall_feedback: string | null;
+  strengths: string[];
+  weaknesses: string[];
+  missing: string[];
+  improvements: string[];
+  generated_at: string;
+}
+
+export interface ExerciseCompletionRow {
+  id: string;
+  user_id: string;
+  exercise_id: string;
+  completed_at: string;
+}
+
+export type MasteryLevel = "not_started" | "learning" | "practicing" | "demonstrated" | "strong";
+
+export interface SkillMastery {
+  skillId: string;
+  level: MasteryLevel;
+  evidence: {
+    studied: boolean;
+    practiced: boolean;
+    project: boolean;
+  };
+}
+
+export interface CourseDiagnosticRow {
+  id: string;
+  user_id: string;
+  course_id: string;
+  experience_level: DiagnosticExperienceLevel;
+  confidence_rating: number;
+  skill_ratings: Record<string, DiagnosticSkillRating>;
+  module_guidance: Record<string, ModuleGuidance>;
+  starting_point: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ModuleSkillRow {
   module_id: string;
   skill_id: string;
@@ -491,6 +609,41 @@ export interface Database {
         Update: Partial<InterviewQuestionRow>;
       };
       module_skills: { Row: ModuleSkillRow; Insert: Partial<ModuleSkillRow>; Update: Partial<ModuleSkillRow> };
+      course_diagnostics: {
+        Row: CourseDiagnosticRow;
+        Insert: Partial<CourseDiagnosticRow>;
+        Update: Partial<CourseDiagnosticRow>;
+      };
+      exercise_completions: {
+        Row: ExerciseCompletionRow;
+        Insert: Partial<ExerciseCompletionRow>;
+        Update: Partial<ExerciseCompletionRow>;
+      };
+      project_decisions: {
+        Row: ProjectDecisionRow;
+        Insert: Partial<ProjectDecisionRow>;
+        Update: Partial<ProjectDecisionRow>;
+      };
+      course_capstones: {
+        Row: CourseCapstoneRow;
+        Insert: Partial<CourseCapstoneRow>;
+        Update: Partial<CourseCapstoneRow>;
+      };
+      capstone_submissions: {
+        Row: CapstoneSubmissionRow;
+        Insert: Partial<CapstoneSubmissionRow>;
+        Update: Partial<CapstoneSubmissionRow>;
+      };
+      capstone_reviews: {
+        Row: CapstoneReviewRow;
+        Insert: Partial<CapstoneReviewRow>;
+        Update: Partial<CapstoneReviewRow>;
+      };
+      portfolio_case_studies: {
+        Row: PortfolioCaseStudyRow;
+        Insert: Partial<PortfolioCaseStudyRow>;
+        Update: Partial<PortfolioCaseStudyRow>;
+      };
     };
   };
 }

@@ -7,6 +7,19 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import type { CoachMode } from "@/lib/mentor";
+
+const MODES: { value: CoachMode; label: string }[] = [
+  { value: "explain", label: "Explain" },
+  { value: "hint", label: "Hint" },
+  { value: "socratic", label: "Socratic" },
+  { value: "debug", label: "Debug" },
+  { value: "review", label: "Review" },
+  { value: "challenge", label: "Challenge" },
+  { value: "interview", label: "Interview" },
+  { value: "career", label: "Career" },
+  { value: "next_step", label: "Next step" },
+];
 
 interface ChatMessage {
   id: string;
@@ -20,6 +33,7 @@ export function MentorChatWidget({ courseId }: { courseId: string }) {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [mode, setMode] = useState<CoachMode>("explain");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,7 +61,7 @@ export function MentorChatWidget({ courseId }: { courseId: string }) {
       const res = await fetch("/api/mentor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, courseId }),
+        body: JSON.stringify({ message, courseId, mode }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
@@ -88,18 +102,34 @@ export function MentorChatWidget({ courseId }: { courseId: string }) {
           <div className="flex items-center justify-between border-b border-border bg-primary px-4 py-3 text-primary-foreground">
             <span className="flex items-center gap-2 text-sm font-semibold">
               <Bot className="size-4 text-accent" />
-              AI mentor
+              AI Coach
             </span>
             <button onClick={() => setOpen(false)} aria-label="Close chat" className="rounded p-1 hover:bg-white/10">
               <X className="size-4" />
             </button>
           </div>
 
+          <div className="flex flex-wrap gap-1 border-b border-border px-3 py-2">
+            {MODES.map((m) => (
+              <button
+                key={m.value}
+                type="button"
+                onClick={() => setMode(m.value)}
+                className={cn(
+                  "rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors",
+                  mode === m.value ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/70"
+                )}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
             {loadingHistory && <p className="text-center text-xs text-muted-foreground">Loading…</p>}
             {!loadingHistory && messages.length === 0 && (
               <p className="text-center text-sm text-muted-foreground">
-                Ask about this module — I have context on the course content.
+                Ask about this module in whichever mode fits — I have context on the course content.
               </p>
             )}
             {messages.map((m) => (
@@ -153,7 +183,7 @@ export function MentorChatWidget({ courseId }: { courseId: string }) {
         variant="accent"
         className="size-14 rounded-full shadow-glow"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Toggle AI mentor chat"
+        aria-label="Toggle AI Coach chat"
       >
         {open ? <X className="size-5" /> : <MessageCircle className="size-5" />}
       </Button>

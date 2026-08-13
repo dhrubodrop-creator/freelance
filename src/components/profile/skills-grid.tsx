@@ -7,8 +7,9 @@ import { Plus, X } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { SkillCategoryRow, SkillLevel, SkillRow, UserSkillRow } from "@/types/db";
+import type { MasteryLevel, SkillCategoryRow, SkillLevel, SkillMastery, SkillRow, UserSkillRow } from "@/types/db";
 
 const LEVELS: SkillLevel[] = ["beginner", "intermediate", "advanced", "expert"];
 const LEVEL_LABEL: Record<SkillLevel, string> = {
@@ -18,14 +19,32 @@ const LEVEL_LABEL: Record<SkillLevel, string> = {
   expert: "Expert",
 };
 
+const MASTERY_LABEL: Record<MasteryLevel, string> = {
+  not_started: "Not started",
+  learning: "Learning",
+  practicing: "Practicing",
+  demonstrated: "Demonstrated",
+  strong: "Strong",
+};
+
+const MASTERY_VARIANT: Record<MasteryLevel, "outline" | "secondary" | "success" | "accent"> = {
+  not_started: "outline",
+  learning: "secondary",
+  practicing: "secondary",
+  demonstrated: "success",
+  strong: "accent",
+};
+
 export function SkillsGrid({
   categories,
   skills,
   userSkills,
+  masteryBySkillId = {},
 }: {
   categories: SkillCategoryRow[];
   skills: SkillRow[];
   userSkills: UserSkillRow[];
+  masteryBySkillId?: Record<string, SkillMastery>;
 }) {
   const router = useRouter();
   const [pending, setPending] = React.useState<string | null>(null);
@@ -97,15 +116,31 @@ export function SkillsGrid({
               {categorySkills.map((skill) => {
                 const owned = mine.get(skill.id);
                 const busy = pending === skill.id;
+                const mastery = masteryBySkillId[skill.id];
                 return (
                   <div
                     key={skill.id}
                     className="flex items-center justify-between gap-3 rounded-lg border border-border px-3.5 py-2.5"
                   >
-                    <div className="flex flex-col">
+                    <div className="flex flex-col gap-1">
                       <span className="text-sm font-medium">{skill.name}</span>
                       {skill.description && (
                         <span className="text-micro text-muted-foreground">{skill.description}</span>
+                      )}
+                      {mastery && mastery.level !== "not_started" && (
+                        <Badge
+                          variant={MASTERY_VARIANT[mastery.level]}
+                          className="w-fit text-[10px]"
+                          title={[
+                            mastery.evidence.studied && "module completed",
+                            mastery.evidence.practiced && "exercise practiced",
+                            mastery.evidence.project && "portfolio proof",
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        >
+                          {MASTERY_LABEL[mastery.level]}
+                        </Badge>
                       )}
                     </div>
                     {owned ? (

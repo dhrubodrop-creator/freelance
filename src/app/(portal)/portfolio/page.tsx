@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { ExternalLink, Plus, Wrench } from "lucide-react";
 
@@ -8,18 +9,36 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { PortfolioFormDialog } from "@/components/profile/portfolio-form-dialog";
-import type { PortfolioItemRow, SkillRow } from "@/types/db";
+import { ProjectDecisions } from "@/components/profile/project-decisions";
+import { PortfolioCaseStudy } from "@/components/profile/portfolio-case-study";
+import { CapstoneCard } from "@/components/profile/capstone-card";
+import type {
+  CapstoneReviewRow,
+  CapstoneSubmissionRow,
+  CourseCapstoneRow,
+  CourseRow,
+  PortfolioCaseStudyRow,
+  PortfolioItemRow,
+  ProjectDecisionRow,
+  SkillRow,
+} from "@/types/db";
 
 export default async function PortfolioPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
 
   const supabase = supabaseAdmin();
-  const [{ data: items }, { data: allSkills }, { data: itemSkillLinks }] = await Promise.all([
-    supabase.from("portfolio_items").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-    supabase.from("skills").select("*").order("name"),
-    supabase.from("portfolio_item_skills").select("portfolio_item_id, skill_id"),
-  ]);
+  const [{ data: items }, { data: allSkills }, { data: itemSkillLinks }, { data: enrollmentRows }] =
+    await Promise.all([
+      supabase.from("portfolio_items").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("skills").select("*").order("name"),
+      supabase.from("portfolio_item_skills").select("portfolio_item_id, skill_id"),
+      supabase
+        .from("enrollments")
+        .select("course_id, courses(id, title)")
+        .eq("user_id", user.id)
+        .eq("status", "active"),
+    ]);
 
   const portfolioItems = (items ?? []) as PortfolioItemRow[];
   const skills = (allSkills ?? []) as SkillRow[];
@@ -29,6 +48,82 @@ export default async function PortfolioPage() {
     const list = skillsByItem.get(link.portfolio_item_id) ?? [];
     list.push(link.skill_id);
     skillsByItem.set(link.portfolio_item_id, list);
+  }
+
+  const decisionsByItem = new Map<string, ProjectDecisionRow[]>();
+  const caseStudyByItem = new Map<string, PortfolioCaseStudyRow>();
+  if (portfolioItems.length > 0) {
+    const [{ data: decisionRows }, { data: caseStudyRows }] = await Promise.all([
+      supabase
+        .from("project_decisions")
+        .select("*")
+        .in("portfolio_item_id", portfolioItems.map((i) => i.id))
+        .order("order_index"),
+      supabase
+        .from("portfolio_case_studies")
+        .select("*")
+        .in("portfolio_item_id", portfolioItems.map((i) => i.id)),
+    ]);
+    for (const d of (decisionRows ?? []) as ProjectDecisionRow[]) {
+      const list = decisionsByItem.get(d.portfolio_item_id) ?? [];
+      list.push(d);
+      decisionsByItem.set(d.portfolio_item_id, list);
+    }
+    for (const c of (caseStudyRows ?? []) as PortfolioCaseStudyRow[]) {
+      caseStudyByItem.set(c.portfolio_item_id, c);
+    }
+  }
+
+  const enrolledCourses = ((enrollmentRows ?? []) as unknown as { course_id: string; courses: CourseRow | null }[])
+    .map((r) => r.courses)
+    .filter((c): c is CourseRow => Boolean(c));
+
+  let capstonePanels: ReactNode = null;
+  if (enrolledCourses.length > 0) {
+    const { data: capstoneRows } = await supabase
+      .from("course_capstones")
+      .select("*")
+      .in("course_id", enrolledCourses.map((c) => c.id));
+    const capstones = (capstoneRows ?? []) as CourseCapstoneRow[];
+
+    if (capstones.length > 0) {
+      const { data: submissionRows } = await supabase
+        .from("capstone_submissions")
+        .select("*")
+        .eq("user_id", user.id)
+        .in("capstone_id", capstones.map((c) => c.id));
+      const submissions = (submissionRows ?? []) as CapstoneSubmissionRow[];
+      const submissionByCapstone = new Map(submissions.map((s) => [s.capstone_id, s]));
+
+      const { data: reviewRows } = submissions.length > 0
+        ? await supabase.from("capstone_reviews").select("*").in("submission_id", submissions.map((s) => s.id))
+        : { data: [] };
+      const reviews = (reviewRows ?? []) as CapstoneReviewRow[];
+      const reviewBySubmission = new Map(reviews.map((r) => [r.submission_id, r]));
+
+      const courseById = new Map(enrolledCourses.map((c) => [c.id, c]));
+
+      capstonePanels = (
+        <div className="flex flex-col gap-4">
+          <h2 className="font-heading text-h4 font-semibold">Capstones</h2>
+          {capstones.map((capstone) => {
+            const submission = submissionByCapstone.get(capstone.id) ?? null;
+            const review = submission ? reviewBySubmission.get(submission.id) ?? null : null;
+            const eligibleItems = portfolioItems.filter((i) => i.course_id === capstone.course_id);
+            return (
+              <CapstoneCard
+                key={capstone.id}
+                capstone={capstone}
+                courseTitle={courseById.get(capstone.course_id)?.title ?? ""}
+                eligibleItems={eligibleItems}
+                submission={submission}
+                review={review}
+              />
+            );
+          })}
+        </div>
+      );
+    }
   }
 
   return (
@@ -125,11 +220,15 @@ export default async function PortfolioPage() {
                     ))}
                   </div>
                 )}
+                <ProjectDecisions portfolioItemId={item.id} decisions={decisionsByItem.get(item.id) ?? []} />
+                <PortfolioCaseStudy portfolioItemId={item.id} caseStudy={caseStudyByItem.get(item.id) ?? null} />
               </CardContent>
             </Card>
           );
         })}
       </div>
+
+      {capstonePanels}
     </div>
   );
 }
