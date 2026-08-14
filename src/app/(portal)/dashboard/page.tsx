@@ -2,14 +2,20 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight, Sparkles, GraduationCap, Radio, UserCircle, FolderGit2 } from "lucide-react";
 
+import { CalendarClock } from "lucide-react";
+
 import { getCurrentUser } from "@/lib/current-user";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { computeProfileCompletion } from "@/lib/profile-completion";
+import { getOrCreateDailyMission } from "@/lib/daily-mission";
+import { getAllResumeStates } from "@/lib/resume-state";
+import { computeCatchupPlan } from "@/lib/catchup-plan";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RegenerateRecommendationButton } from "@/components/portal/regenerate-recommendation-button";
 import { MonetisationInsightCard } from "@/components/portal/monetisation-insight-card";
+import { DailyMissionCard } from "@/components/portal/daily-mission-card";
 import { PriceTag } from "@/components/shared/price-tag";
 import type {
   CourseRow,
@@ -83,6 +89,13 @@ export default async function DashboardPage() {
     : { data: [] };
   const actions = (actionRows ?? []) as MonetisationActionRow[];
 
+  const [mission, resumeStates] = await Promise.all([
+    getOrCreateDailyMission(user.id),
+    getAllResumeStates(user.id),
+  ]);
+  const missionCourse = mission ? (courses ?? []).find((c) => c.id === mission.course_id) : null;
+  const catchupPlan = mission ? await computeCatchupPlan(user.id, mission.course_id) : null;
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -116,6 +129,24 @@ export default async function DashboardPage() {
           <span className="font-heading text-xl font-bold">{plan ? plan.readiness_score : "—"}</span>
         </div>
       </div>
+
+      <DailyMissionCard mission={mission} courseSlug={missionCourse?.slug ?? null} />
+
+      {catchupPlan && (
+        <Card className="border-primary-100 bg-primary-50/40">
+          <CardContent className="flex flex-col gap-2 py-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-primary-700">
+              <CalendarClock className="size-4" />
+              You&rsquo;ve been away {catchupPlan.days_inactive} days — here&rsquo;s a realistic way back in
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {catchupPlan.remaining_modules} module{catchupPlan.remaining_modules === 1 ? "" : "s"} left, about{" "}
+              {catchupPlan.recommended_weekly_minutes} minutes/week based on your own past pace — not a guess.
+              {catchupPlan.target_completion_date && ` Realistic finish: ${catchupPlan.target_completion_date}.`}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <MonetisationInsightCard plan={plan} actions={actions} />
 
@@ -162,6 +193,10 @@ export default async function DashboardPage() {
             {enrollments.map((enrollment) => {
               const course = enrollment.course;
               if (!course) return null;
+              const checkpoint = resumeStates.get(course.id);
+              const resumeHref = checkpoint?.module_id
+                ? `/courses/${course.slug}/learn/${checkpoint.module_id}`
+                : `/courses/${course.slug}/learn`;
               return (
                 <Card key={enrollment.id}>
                   <CardHeader>
@@ -170,7 +205,7 @@ export default async function DashboardPage() {
                   </CardHeader>
                   <CardContent>
                     <Button asChild size="sm">
-                      <Link href={`/courses/${course.slug}/learn`}>
+                      <Link href={resumeHref}>
                         Resume <ArrowRight className="size-4" />
                       </Link>
                     </Button>

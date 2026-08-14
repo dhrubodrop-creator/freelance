@@ -14,6 +14,8 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { toYouTubeEmbedUrl } from "@/lib/youtube";
 import { ModuleSidebar } from "@/components/course/module-sidebar";
 import { MarkCompleteButton } from "@/components/course/mark-complete-button";
+import { ConceptRescueButton } from "@/components/course/concept-rescue-button";
+import { ResumeStateTracker } from "@/components/course/resume-state-tracker";
 import { MentorChatWidget } from "@/components/portal/mentor-chat-widget";
 import { PlaybookTab } from "@/components/course/playbook-tab";
 import { ExercisesTab } from "@/components/course/exercises-tab";
@@ -252,12 +254,13 @@ export default async function ModulePage({
         </Card>
       )}
 
-      <div>
+      <div className="flex flex-wrap items-center gap-3">
         <MarkCompleteButton
           moduleId={activeModule.id}
           nextHref={nextModule ? `/courses/${slug}/learn/${nextModule.id}` : null}
           completed={isCompleted}
         />
+        <ConceptRescueButton moduleId={activeModule.id} />
       </div>
 
       {(templates.length > 0 || playbooks.length > 0) && (
@@ -296,6 +299,7 @@ export default async function ModulePage({
 
   return (
     <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
+      <ResumeStateTracker courseId={course.id} moduleId={activeModule.id} activeTab="overview" />
       <aside className="lg:sticky lg:top-24 lg:self-start">
         <p className="mb-2 px-3 text-micro font-semibold uppercase tracking-wide text-muted-foreground">
           {course.title}

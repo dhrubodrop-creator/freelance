@@ -374,6 +374,75 @@ export interface CourseDiagnosticRow {
   updated_at: string;
 }
 
+export type DailyMissionStatus = "pending" | "in_progress" | "completed" | "skipped";
+export type DailyMissionReason =
+  | "next_incomplete_module"
+  | "unfinished_exercise"
+  | "skill_gap_practice"
+  | "catchup"
+  | "capstone_progress";
+
+export interface DailyMissionRow {
+  id: string;
+  user_id: string;
+  mission_date: string;
+  course_id: string;
+  module_id: string | null;
+  exercise_id: string | null;
+  objective: string;
+  why_it_matters: string;
+  estimated_minutes: number;
+  acceptance_criteria: string[];
+  status: DailyMissionStatus;
+  reason: DailyMissionReason;
+  generated_via: "deterministic" | "ai";
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface LearnerCheckpointRow {
+  id: string;
+  user_id: string;
+  course_id: string;
+  module_id: string | null;
+  active_tab: "overview" | "playbook" | "practice" | "interview" | null;
+  exercise_id: string | null;
+  video_position_seconds: number | null;
+  updated_at: string;
+}
+
+export interface ConceptRescueRequestRow {
+  id: string;
+  user_id: string;
+  module_id: string;
+  exercise_id: string | null;
+  question: string | null;
+  simple_explanation: string;
+  visual_example: string;
+  analogy: string;
+  code_example: string | null;
+  five_minute_practice: string;
+  created_at: string;
+}
+
+export interface CatchupWeekPlan {
+  weekNumber: number;
+  moduleTitles: string[];
+  note: string;
+}
+
+export interface CatchupPlanRow {
+  id: string;
+  user_id: string;
+  course_id: string;
+  days_inactive: number;
+  remaining_modules: number;
+  recommended_weekly_minutes: number;
+  weekly_plan: CatchupWeekPlan[];
+  target_completion_date: string | null;
+  generated_at: string;
+}
+
 export interface ModuleSkillRow {
   module_id: string;
   skill_id: string;
@@ -644,6 +713,18 @@ export interface Database {
         Insert: Partial<PortfolioCaseStudyRow>;
         Update: Partial<PortfolioCaseStudyRow>;
       };
+      daily_missions: { Row: DailyMissionRow; Insert: Partial<DailyMissionRow>; Update: Partial<DailyMissionRow> };
+      learner_checkpoints: {
+        Row: LearnerCheckpointRow;
+        Insert: Partial<LearnerCheckpointRow>;
+        Update: Partial<LearnerCheckpointRow>;
+      };
+      concept_rescue_requests: {
+        Row: ConceptRescueRequestRow;
+        Insert: Partial<ConceptRescueRequestRow>;
+        Update: Partial<ConceptRescueRequestRow>;
+      };
+      catchup_plans: { Row: CatchupPlanRow; Insert: Partial<CatchupPlanRow>; Update: Partial<CatchupPlanRow> };
     };
   };
 }

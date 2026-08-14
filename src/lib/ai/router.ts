@@ -45,7 +45,9 @@ export type AITask =
   | "capstone_defence_questions"
   | "capstone_scoring"
   | "portfolio_generation"
-  | "monetisation_planning";
+  | "monetisation_planning"
+  | "daily_mission_framing"
+  | "concept_rescue";
 
 interface TaskConfig {
   maxOutputTokens: number;
@@ -160,6 +162,20 @@ const TASK_CONFIG: Record<AITask, TaskConfig> = {
     maxOutputTokens: envInt("AI_BUDGET_MONETISATION_TOKENS", 900),
     temperature: 0.5,
     timeoutMs: envInt("AI_TIMEOUT_MS_MED", 20_000),
+    maxRetries: 2,
+    cacheTtlMs: 0,
+  },
+  daily_mission_framing: {
+    maxOutputTokens: envInt("AI_BUDGET_MISSION_TOKENS", 600),
+    temperature: 0.4,
+    timeoutMs: envInt("AI_TIMEOUT_MS_LOW", 15_000),
+    maxRetries: 2,
+    cacheTtlMs: 0,
+  },
+  concept_rescue: {
+    maxOutputTokens: envInt("AI_BUDGET_RESCUE_TOKENS", 1100),
+    temperature: 0.4,
+    timeoutMs: envInt("AI_TIMEOUT_MS_HIGH", 30_000),
     maxRetries: 2,
     cacheTtlMs: 0,
   },
