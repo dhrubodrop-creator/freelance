@@ -10,6 +10,7 @@ import { Logo } from "@/components/shared/logo";
 import { PriceTag } from "@/components/shared/price-tag";
 import { getCourseVisual } from "@/components/marketing/course-visual";
 import { RazorpayCheckoutButton } from "@/components/portal/razorpay-checkout-button";
+import { logEvent } from "@/lib/analytics";
 import type { CourseRow } from "@/types/db";
 import type { Metadata } from "next";
 
@@ -26,6 +27,10 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
   if (!course) notFound();
   const typedCourse = course as CourseRow;
   const courseVisual = getCourseVisual(typedCourse.slug);
+
+  // "checkout_viewed" — closes the funnel gap between checkout_started (order-create click)
+  // and the actual page render, so drop-off before ever seeing the checkout page is visible too.
+  void logEvent(user.id, "checkout_viewed", { courseId: typedCourse.id, courseSlug: typedCourse.slug });
 
   return (
     <div className="relative flex min-h-screen items-center overflow-hidden bg-muted/30 px-6 py-16">

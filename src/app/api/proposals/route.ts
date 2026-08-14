@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { generateProposal, listProposals } from "@/lib/proposal-generation";
+import { logEvent } from "@/lib/analytics";
 
 const bodySchema = z.object({
   portfolioItemId: z.string().uuid().nullable().optional(),
@@ -38,5 +39,6 @@ export async function POST(req: Request) {
 
   const result = await generateProposal({ userId: user.id, ...parsed.data });
   if ("error" in result) return NextResponse.json({ error: result.error }, { status: 400 });
+  void logEvent(user.id, "proposal_created", { serviceType: parsed.data.serviceType });
   return NextResponse.json(result, { status: 201 });
 }

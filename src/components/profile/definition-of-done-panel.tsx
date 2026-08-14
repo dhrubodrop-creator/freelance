@@ -227,7 +227,7 @@ function TestGeneratorDialog({
       </DialogTrigger>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Generate tests from your acceptance criteria</DialogTitle>
+          <DialogTitle>Generate tests from the rules your project must satisfy</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-3">
           {repoFullName && (

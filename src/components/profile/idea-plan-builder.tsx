@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PlainTerm } from "@/components/shared/plain-term";
 import type { CourseRow, ProjectIdeaPlanRow } from "@/types/db";
 
 export function IdeaPlanBuilder({ courses }: { courses: CourseRow[] }) {
@@ -127,7 +128,9 @@ export function IdeaPlanBuilder({ courses }: { courses: CourseRow[] }) {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Acceptance criteria</CardTitle>
+            <CardTitle className="text-base">
+              <PlainTerm term="acceptance_criteria" />
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-1.5 text-sm">
             {plan.acceptance_criteria.map((c, i) => (
@@ -185,7 +188,9 @@ export function IdeaPlanBuilder({ courses }: { courses: CourseRow[] }) {
               <pre className="mt-1 whitespace-pre-wrap rounded-lg bg-muted p-3 font-mono text-xs">{plan.env_template}</pre>
             </div>
             <p className="text-muted-foreground">
-              <span className="font-medium text-foreground">Branch strategy: </span>
+              <span className="font-medium text-foreground">
+                How to organize your <PlainTerm term="branch" className="inline-flex" />:{" "}
+              </span>
               {plan.branch_strategy}
             </p>
           </CardContent>

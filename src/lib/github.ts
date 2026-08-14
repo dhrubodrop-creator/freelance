@@ -208,6 +208,106 @@ export async function fetchRepoFileContent(accessToken: string, repoFullName: st
   return Buffer.from(data.content, "base64").toString("utf8");
 }
 
+export interface CreateRepoResult {
+  ok: boolean;
+  repoFullName?: string;
+  htmlUrl?: string;
+  defaultBranch?: string;
+  error?: string;
+}
+
+/**
+ * Real GitHub repo creation — Phase 6 "no fake repository creation." This calls the actual
+ * GitHub REST API (`POST /user/repos`, then two `PUT contents` calls for starter files) using
+ * the learner's own stored OAuth token and the already-requested `repo` scope. Not exercised
+ * against real GitHub in this environment (GITHUB_CLIENT_ID/SECRET are unset here — see
+ * isGitHubConfigured()), so this is code-verified (types, error handling, same fetch pattern
+ * as fetchRepoFileContent above) but NOT GitHub-side verified. Every failure path returns a
+ * real error message from GitHub's API — never a fabricated success.
+ */
+export async function createProjectRepository(input: {
+  accessToken: string;
+  projectTitle: string;
+  description: string | null;
+}): Promise<CreateRepoResult> {
+  // GitHub repo names: letters, numbers, hyphens, underscores, periods only.
+  const repoName = `ropes-${input.projectTitle
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "project"}`;
+
+  const createRes = await fetch("https://api.github.com/user/repos", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${input.accessToken}`,
+      Accept: "application/vnd.github+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name: repoName,
+      description: input.description ?? `Built on Ropes: ${input.projectTitle}`,
+      private: true,
+      auto_init: true, // creates the repo with an initial commit + default README + a single default branch
+    }),
+  });
+
+  if (!createRes.ok) {
+    const body = await createRes.json().catch(() => null);
+    return { ok: false, error: body?.message ?? `GitHub API returned ${createRes.status}` };
+  }
+
+  const repo = (await createRes.json()) as { full_name?: string; html_url?: string; default_branch?: string };
+  const repoFullName = repo.full_name;
+  if (!repoFullName) return { ok: false, error: "GitHub did not return a repository name." };
+
+  // Starter files — new paths only (no sha lookup needed), added on top of auto_init's own README.
+  // Ropes doesn't prescribe a branch strategy beyond the single default branch auto_init creates;
+  // that's a per-project practice the learner adopts, not something generated here.
+  const starterFiles: { path: string; content: string; message: string }[] = [
+    {
+      path: ".env.example",
+      content: `# Private settings this project needs — never commit real values here.\n# Copy this file to .env (or .env.local) and fill in your own values.\n`,
+      message: "Add environment template (via Ropes)",
+    },
+    {
+      path: "PROJECT.md",
+      content: `# ${input.projectTitle}\n\nBuilt as part of a Ropes course project.\n\n${
+        input.description ?? ""
+      }\n`,
+      message: "Add project metadata (via Ropes)",
+    },
+  ];
+
+  for (const file of starterFiles) {
+    const putRes = await fetch(`https://api.github.com/repos/${repoFullName}/contents/${file.path}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${input.accessToken}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: file.message,
+        content: Buffer.from(file.content, "utf8").toString("base64"),
+      }),
+    });
+    if (!putRes.ok) {
+      // The repo itself was created successfully — a starter-file failure shouldn't be reported
+      // as a full failure, but it must not be silently hidden either.
+      return {
+        ok: true,
+        repoFullName,
+        htmlUrl: repo.html_url,
+        defaultBranch: repo.default_branch,
+        error: `Repository created, but couldn't add ${file.path}: ${putRes.status}`,
+      };
+    }
+  }
+
+  return { ok: true, repoFullName, htmlUrl: repo.html_url, defaultBranch: repo.default_branch };
+}
+
 export async function findUserIdByRepo(repoFullName: string): Promise<string | null> {
   const supabase = supabaseAdmin();
   const { data } = await supabase

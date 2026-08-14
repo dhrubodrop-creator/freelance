@@ -7,6 +7,7 @@ import { AlertTriangle, CheckCircle2, ChevronDown, HelpCircle, Loader2, Rocket }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { PlainTerm } from "@/components/shared/plain-term";
 import type { ProjectHealth } from "@/lib/production-readiness";
 
 export function ProductionReadinessCard({ portfolioItemId, initialDeploymentUrl }: { portfolioItemId: string; initialDeploymentUrl: string | null }) {
@@ -77,6 +78,7 @@ export function ProductionReadinessCard({ portfolioItemId, initialDeploymentUrl 
       </button>
       {expanded && (
         <div className="flex flex-col gap-3 border-t border-border p-3.5 text-sm">
+          <PlainTerm term="deployment" className="text-micro" />
           <div className="flex gap-2">
             <Input value={deploymentUrl} onChange={(e) => setDeploymentUrl(e.target.value)} placeholder="https://your-deployed-app.vercel.app" />
             <Button size="sm" variant="outline" onClick={saveUrl}>
