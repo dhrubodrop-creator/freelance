@@ -57,7 +57,9 @@ export type AITask =
   | "test_generation"
   | "quality_lab_summary"
   | "learner_ai_feature_execution"
-  | "ai_eval_judge";
+  | "ai_eval_judge"
+  | "simulator_turn"
+  | "simulator_evaluation";
 
 interface TaskConfig {
   maxOutputTokens: number;
@@ -256,6 +258,20 @@ const TASK_CONFIG: Record<AITask, TaskConfig> = {
     maxOutputTokens: envInt("AI_BUDGET_EVAL_JUDGE_TOKENS", 900),
     temperature: 0.2,
     timeoutMs: envInt("AI_TIMEOUT_MS_MED", 20_000),
+    maxRetries: 2,
+    cacheTtlMs: 0,
+  },
+  simulator_turn: {
+    maxOutputTokens: envInt("AI_BUDGET_SIMULATOR_TOKENS", 700),
+    temperature: 0.7,
+    timeoutMs: envInt("AI_TIMEOUT_MS_MED", 20_000),
+    maxRetries: 2,
+    cacheTtlMs: 0,
+  },
+  simulator_evaluation: {
+    maxOutputTokens: envInt("AI_BUDGET_SIMULATOR_EVAL_TOKENS", 1100),
+    temperature: 0.3,
+    timeoutMs: envInt("AI_TIMEOUT_MS_HIGH", 30_000),
     maxRetries: 2,
     cacheTtlMs: 0,
   },

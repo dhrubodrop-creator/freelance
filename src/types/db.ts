@@ -530,6 +530,26 @@ export interface AcceptanceCheckRow {
   created_at: string;
 }
 
+export type SimulationType = "client" | "discovery_call" | "scope_creep" | "incident" | "demo_day";
+
+export interface SimulationTranscriptTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface SimulationSessionRow {
+  id: string;
+  user_id: string;
+  portfolio_item_id: string | null;
+  simulation_type: SimulationType;
+  scenario_context: Record<string, unknown>;
+  transcript: SimulationTranscriptTurn[];
+  status: "active" | "completed";
+  evaluation: Record<string, unknown> | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
 export interface GitHubConnectionRow {
   id: string;
   user_id: string;
@@ -874,6 +894,11 @@ export interface Database {
         Row: AcceptanceCheckRow;
         Insert: Partial<AcceptanceCheckRow>;
         Update: Partial<AcceptanceCheckRow>;
+      };
+      simulation_sessions: {
+        Row: SimulationSessionRow;
+        Insert: Partial<SimulationSessionRow>;
+        Update: Partial<SimulationSessionRow>;
       };
     };
   };
