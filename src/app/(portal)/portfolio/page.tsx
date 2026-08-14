@@ -18,6 +18,8 @@ import { GitHubConnectionCard } from "@/components/profile/github-connection-car
 import { GitHubRepoLink } from "@/components/profile/github-repo-link";
 import { CodeCoachPanel } from "@/components/profile/code-coach-panel";
 import { DefinitionOfDonePanel } from "@/components/profile/definition-of-done-panel";
+import { QualityLabsPanel } from "@/components/profile/quality-labs-panel";
+import { AiEvaluationStudio } from "@/components/profile/ai-evaluation-studio";
 import { getGitHubConnectionSummary } from "@/lib/github";
 import type {
   CapstoneReviewRow,
@@ -282,6 +284,8 @@ export default async function PortfolioPage() {
                   checks={acceptanceChecksByItem.get(item.id) ?? []}
                   repoFullName={repoByItem.get(item.id) ?? null}
                 />
+                <QualityLabsPanel portfolioItemId={item.id} repoFullName={repoByItem.get(item.id) ?? null} />
+                <AiEvaluationStudio portfolioItemId={item.id} />
                 <ProjectDecisions portfolioItemId={item.id} decisions={decisionsByItem.get(item.id) ?? []} />
                 <ProjectCheckpoints portfolioItemId={item.id} checkpoints={checkpointsByItem.get(item.id) ?? []} />
                 <PortfolioCaseStudy portfolioItemId={item.id} caseStudy={caseStudyByItem.get(item.id) ?? null} />

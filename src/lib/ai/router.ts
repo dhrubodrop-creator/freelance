@@ -54,7 +54,10 @@ export type AITask =
   | "code_review"
   | "architecture_drift_check"
   | "ai_code_defense"
-  | "test_generation";
+  | "test_generation"
+  | "quality_lab_summary"
+  | "learner_ai_feature_execution"
+  | "ai_eval_judge";
 
 interface TaskConfig {
   maxOutputTokens: number;
@@ -232,6 +235,27 @@ const TASK_CONFIG: Record<AITask, TaskConfig> = {
     maxOutputTokens: envInt("AI_BUDGET_TEST_GEN_TOKENS", 1800),
     temperature: 0.3,
     timeoutMs: envInt("AI_TIMEOUT_MS_CRITICAL", 40_000),
+    maxRetries: 2,
+    cacheTtlMs: 0,
+  },
+  quality_lab_summary: {
+    maxOutputTokens: envInt("AI_BUDGET_QUALITY_SUMMARY_TOKENS", 700),
+    temperature: 0.3,
+    timeoutMs: envInt("AI_TIMEOUT_MS_MED", 20_000),
+    maxRetries: 2,
+    cacheTtlMs: 0,
+  },
+  learner_ai_feature_execution: {
+    maxOutputTokens: envInt("AI_BUDGET_LEARNER_EXEC_TOKENS", 1200),
+    temperature: 0.5,
+    timeoutMs: envInt("AI_TIMEOUT_MS_HIGH", 30_000),
+    maxRetries: 1,
+    cacheTtlMs: 0,
+  },
+  ai_eval_judge: {
+    maxOutputTokens: envInt("AI_BUDGET_EVAL_JUDGE_TOKENS", 900),
+    temperature: 0.2,
+    timeoutMs: envInt("AI_TIMEOUT_MS_MED", 20_000),
     maxRetries: 2,
     cacheTtlMs: 0,
   },
