@@ -10,6 +10,7 @@ import { computeProfileCompletion } from "@/lib/profile-completion";
 import { getOrCreateDailyMission } from "@/lib/daily-mission";
 import { getAllResumeStates } from "@/lib/resume-state";
 import { computeCatchupPlan } from "@/lib/catchup-plan";
+import { checkAndCelebrateMilestones } from "@/lib/celebrations";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,8 @@ type EnrollmentWithCourse = EnrollmentRow & { course: CourseRow | null };
 export default async function DashboardPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
+
+  void checkAndCelebrateMilestones(user.id);
 
   const supabase = supabaseAdmin();
 

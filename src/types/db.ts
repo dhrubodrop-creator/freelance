@@ -552,6 +552,13 @@ export interface SimulationSessionRow {
   completed_at: string | null;
 }
 
+export interface CelebratedMilestoneRow {
+  id: string;
+  user_id: string;
+  milestone_key: string;
+  created_at: string;
+}
+
 export interface ProofShareTokenRow {
   id: string;
   user_id: string;
@@ -913,6 +920,11 @@ export interface Database {
         Row: ProofShareTokenRow;
         Insert: Partial<ProofShareTokenRow>;
         Update: Partial<ProofShareTokenRow>;
+      };
+      celebrated_milestones: {
+        Row: CelebratedMilestoneRow;
+        Insert: Partial<CelebratedMilestoneRow>;
+        Update: Partial<CelebratedMilestoneRow>;
       };
     };
   };
