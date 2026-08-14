@@ -23,6 +23,7 @@ import { AiEvaluationStudio } from "@/components/profile/ai-evaluation-studio";
 import { EvidencePanel } from "@/components/profile/evidence-panel";
 import { ProductionReadinessCard } from "@/components/profile/production-readiness-card";
 import { GraduationReplayPanel } from "@/components/profile/graduation-replay-panel";
+import { ExpandableGroup } from "@/components/profile/expandable-group";
 import { getGitHubConnectionSummary } from "@/lib/github";
 import type {
   CapstoneReviewRow,
@@ -280,25 +281,28 @@ export default async function PortfolioPage() {
                     ))}
                   </div>
                 )}
-                <GitHubRepoLink portfolioItemId={item.id} repoFullName={repoByItem.get(item.id) ?? null} />
-                <CodeCoachPanel portfolioItemId={item.id} repoFullName={repoByItem.get(item.id) ?? null} />
-                <DefinitionOfDonePanel
-                  portfolioItemId={item.id}
-                  checks={acceptanceChecksByItem.get(item.id) ?? []}
-                  repoFullName={repoByItem.get(item.id) ?? null}
-                />
-                <QualityLabsPanel portfolioItemId={item.id} repoFullName={repoByItem.get(item.id) ?? null} />
-                <AiEvaluationStudio portfolioItemId={item.id} />
-                <EvidencePanel
-                  portfolioItemId={item.id}
-                  repoFullName={repoByItem.get(item.id) ?? null}
-                  hasArchitecture={Boolean(item.architecture_note)}
-                />
-                <ProductionReadinessCard portfolioItemId={item.id} initialDeploymentUrl={item.deployment_url} />
-                <GraduationReplayPanel portfolioItemId={item.id} />
                 <ProjectDecisions portfolioItemId={item.id} decisions={decisionsByItem.get(item.id) ?? []} />
                 <ProjectCheckpoints portfolioItemId={item.id} checkpoints={checkpointsByItem.get(item.id) ?? []} />
                 <PortfolioCaseStudy portfolioItemId={item.id} caseStudy={caseStudyByItem.get(item.id) ?? null} />
+
+                <ExpandableGroup label="Engineering studio">
+                  <GitHubRepoLink portfolioItemId={item.id} repoFullName={repoByItem.get(item.id) ?? null} />
+                  <CodeCoachPanel portfolioItemId={item.id} repoFullName={repoByItem.get(item.id) ?? null} />
+                  <DefinitionOfDonePanel
+                    portfolioItemId={item.id}
+                    checks={acceptanceChecksByItem.get(item.id) ?? []}
+                    repoFullName={repoByItem.get(item.id) ?? null}
+                  />
+                  <QualityLabsPanel portfolioItemId={item.id} repoFullName={repoByItem.get(item.id) ?? null} />
+                  <AiEvaluationStudio portfolioItemId={item.id} />
+                  <EvidencePanel
+                    portfolioItemId={item.id}
+                    repoFullName={repoByItem.get(item.id) ?? null}
+                    hasArchitecture={Boolean(item.architecture_note)}
+                  />
+                  <ProductionReadinessCard portfolioItemId={item.id} initialDeploymentUrl={item.deployment_url} />
+                  <GraduationReplayPanel portfolioItemId={item.id} />
+                </ExpandableGroup>
               </CardContent>
             </Card>
           );
