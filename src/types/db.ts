@@ -17,6 +17,19 @@ export interface UserRow {
 
 export type WorkPreference = "full_time" | "contract" | "freelance" | "consulting" | "remote_only";
 
+export type OutcomeGoal =
+  | "better_job"
+  | "start_freelancing"
+  | "side_income"
+  | "become_consultant"
+  | "one_person_business"
+  | "automate_my_work"
+  | "build_and_sell_ai_solutions"
+  | "become_ai_engineer"
+  | "build_a_portfolio"
+  | "not_sure_yet"
+  | "custom";
+
 export interface ProfileRow {
   id: string;
   user_id: string;
@@ -36,6 +49,8 @@ export interface ProfileRow {
   portfolio_url: string | null;
   github_url: string | null;
   website_url: string | null;
+  outcome_goal: OutcomeGoal | null;
+  outcome_goal_custom: string | null;
 }
 
 export interface WorkExperienceRow {

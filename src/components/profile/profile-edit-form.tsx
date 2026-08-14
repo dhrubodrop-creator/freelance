@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { ProfileRow, WorkPreference } from "@/types/db";
+import type { OutcomeGoal, ProfileRow, WorkPreference } from "@/types/db";
 
 const WORK_PREFERENCE_OPTIONS: { value: WorkPreference; label: string }[] = [
   { value: "full_time", label: "Full-time employment" },
@@ -17,6 +17,20 @@ const WORK_PREFERENCE_OPTIONS: { value: WorkPreference; label: string }[] = [
   { value: "freelance", label: "Freelance projects" },
   { value: "consulting", label: "Consulting" },
   { value: "remote_only", label: "Remote only" },
+];
+
+export const OUTCOME_GOAL_OPTIONS: { value: OutcomeGoal; label: string }[] = [
+  { value: "better_job", label: "Get a better job" },
+  { value: "start_freelancing", label: "Start freelancing" },
+  { value: "side_income", label: "Build a side income" },
+  { value: "become_consultant", label: "Become a consultant" },
+  { value: "one_person_business", label: "Build a one-person business" },
+  { value: "automate_my_work", label: "Automate my current work" },
+  { value: "build_and_sell_ai_solutions", label: "Build and sell AI solutions" },
+  { value: "become_ai_engineer", label: "Become an AI engineer" },
+  { value: "build_a_portfolio", label: "Build a portfolio" },
+  { value: "not_sure_yet", label: "I don't know yet" },
+  { value: "custom", label: "Something else" },
 ];
 
 export function ProfileEditForm({ profile }: { profile: ProfileRow | null }) {
@@ -35,6 +49,8 @@ export function ProfileEditForm({ profile }: { profile: ProfileRow | null }) {
   const [portfolioUrl, setPortfolioUrl] = React.useState(profile?.portfolio_url ?? "");
   const [githubUrl, setGithubUrl] = React.useState(profile?.github_url ?? "");
   const [websiteUrl, setWebsiteUrl] = React.useState(profile?.website_url ?? "");
+  const [outcomeGoal, setOutcomeGoal] = React.useState<OutcomeGoal | "">(profile?.outcome_goal ?? "");
+  const [outcomeGoalCustom, setOutcomeGoalCustom] = React.useState(profile?.outcome_goal_custom ?? "");
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -53,6 +69,8 @@ export function ProfileEditForm({ profile }: { profile: ProfileRow | null }) {
           portfolioUrl,
           githubUrl,
           websiteUrl,
+          outcomeGoal: outcomeGoal || null,
+          outcomeGoalCustom: outcomeGoalCustom || null,
         }),
       });
       if (!res.ok) {
@@ -70,6 +88,37 @@ export function ProfileEditForm({ profile }: { profile: ProfileRow | null }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 rounded-xl border border-accent/30 bg-accent-50/30 p-4">
+        <div>
+          <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-accent-700">
+            My outcome
+          </h3>
+          <p className="mt-1 text-micro text-muted-foreground">
+            What you&rsquo;re actually here to achieve — this drives your Next Best Move, opportunity relevance, and
+            monetisation suggestions across Ropes.
+          </p>
+        </div>
+        <Select value={outcomeGoal} onValueChange={(v) => setOutcomeGoal(v as OutcomeGoal)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Choose your goal" />
+          </SelectTrigger>
+          <SelectContent>
+            {OUTCOME_GOAL_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {outcomeGoal === "custom" && (
+          <Input
+            value={outcomeGoalCustom}
+            onChange={(e) => setOutcomeGoalCustom(e.target.value)}
+            placeholder="Tell us what you're aiming for"
+          />
+        )}
+      </div>
+
       <div className="flex flex-col gap-4">
         <h3 className="font-heading text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Basic

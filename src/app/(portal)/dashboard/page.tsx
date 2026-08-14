@@ -11,6 +11,9 @@ import { getOrCreateDailyMission } from "@/lib/daily-mission";
 import { getAllResumeStates } from "@/lib/resume-state";
 import { computeCatchupPlan } from "@/lib/catchup-plan";
 import { checkAndCelebrateMilestones } from "@/lib/celebrations";
+import { getReadyPlan } from "@/lib/outcome-engine";
+import { NextBestMoveCard } from "@/components/portal/next-best-move-card";
+import { MakeMeReadyPanel } from "@/components/portal/make-me-ready-panel";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +38,8 @@ export default async function DashboardPage() {
   if (!user) redirect("/sign-in");
 
   void checkAndCelebrateMilestones(user.id);
+  const readyPlan = await getReadyPlan(user.id);
+  const nextBestMove = readyPlan[0];
 
   const supabase = supabaseAdmin();
 
@@ -132,6 +137,9 @@ export default async function DashboardPage() {
           <span className="font-heading text-xl font-bold">{plan ? plan.readiness_score : "—"}</span>
         </div>
       </div>
+
+      <NextBestMoveCard move={nextBestMove} />
+      <MakeMeReadyPanel plan={readyPlan} />
 
       <DailyMissionCard mission={mission} courseSlug={missionCourse?.slug ?? null} />
 

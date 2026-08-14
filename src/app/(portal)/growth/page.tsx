@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Flame, Rocket, Sparkles, TestTube2, Trophy } from "lucide-react";
 
@@ -118,12 +119,17 @@ export default async function GrowthPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-primary-100 bg-primary-50/30">
-        <CardContent className="flex items-center gap-2.5 py-4 text-sm">
-          <TestTube2 className="size-4 shrink-0 text-primary-700" />
-          Run checks in your Portfolio (Quality Labs, AI Evaluation Studio, tests) to turn more of this tree green.
-        </CardContent>
-      </Card>
+      <Link href="/reality-check" className="block">
+        <Card className="border-primary-100 bg-primary-50/30 transition-colors hover:bg-primary-50/60">
+          <CardContent className="flex items-center justify-between gap-2.5 py-4 text-sm">
+            <span className="flex items-center gap-2.5">
+              <TestTube2 className="size-4 shrink-0 text-primary-700" />
+              Run checks in your Portfolio (Quality Labs, AI Evaluation Studio, tests) to turn more of this tree green.
+            </span>
+            <span className="shrink-0 font-medium text-primary-700">Reality Check →</span>
+          </CardContent>
+        </Card>
+      </Link>
     </div>
   );
 }

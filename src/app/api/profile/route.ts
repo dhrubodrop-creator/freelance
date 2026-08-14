@@ -111,6 +111,23 @@ const profileUpdateSchema = z.object({
   portfolioUrl: z.string().url().max(500).optional().nullable().or(z.literal("")),
   githubUrl: z.string().url().max(500).optional().nullable().or(z.literal("")),
   websiteUrl: z.string().url().max(500).optional().nullable().or(z.literal("")),
+  outcomeGoal: z
+    .enum([
+      "better_job",
+      "start_freelancing",
+      "side_income",
+      "become_consultant",
+      "one_person_business",
+      "automate_my_work",
+      "build_and_sell_ai_solutions",
+      "become_ai_engineer",
+      "build_a_portfolio",
+      "not_sure_yet",
+      "custom",
+    ])
+    .optional()
+    .nullable(),
+  outcomeGoalCustom: z.string().max(300).optional().nullable(),
 });
 
 /** Ongoing profile edits (Phase 1) — separate from the one-time onboarding POST above. */
@@ -138,6 +155,8 @@ export async function PATCH(req: Request) {
       portfolio_url: v.portfolioUrl || null,
       github_url: v.githubUrl || null,
       website_url: v.websiteUrl || null,
+      outcome_goal: v.outcomeGoal ?? null,
+      outcome_goal_custom: v.outcomeGoal === "custom" ? (v.outcomeGoalCustom ?? null) : null,
     },
     { onConflict: "user_id" }
   );

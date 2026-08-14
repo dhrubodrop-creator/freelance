@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Briefcase, CheckCircle2, ExternalLink, HelpCircle, MapPin, XCircle } from "lucide-react";
 
@@ -115,6 +116,34 @@ export default async function OpportunitiesPage() {
                         );
                       })}
                     </div>
+                  </div>
+                )}
+                {breakdown.length > 0 && (
+                  <div className="rounded-lg bg-muted/40 p-2.5 text-sm">
+                    <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">Make me ready for this</p>
+                    {breakdown.some((b) => b.status === "missing") ? (
+                      <p className="mt-1">
+                        Close the gap on{" "}
+                        <span className="font-medium">
+                          {breakdown
+                            .filter((b) => b.status === "missing")
+                            .map((b) => skillNameById.get(b.skillId) ?? "a required skill")
+                            .join(", ")}
+                        </span>
+                        , then revisit this listing.{" "}
+                        <Link href="/skills" className="text-accent-600 hover:underline">
+                          Go to skills →
+                        </Link>
+                      </p>
+                    ) : (
+                      <p className="mt-1">
+                        You have real evidence for every listed skill —{" "}
+                        <Link href="/dashboard" className="text-accent-600 hover:underline">
+                          consider generating a proposal
+                        </Link>
+                        . This doesn&rsquo;t guarantee you&rsquo;ll get this opportunity.
+                      </p>
+                    )}
                   </div>
                 )}
                 {opp.source_url && (
