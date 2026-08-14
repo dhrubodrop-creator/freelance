@@ -23,6 +23,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/legal/terms`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE_URL}/legal/privacy`, changeFrequency: "yearly", priority: 0.2 },
     { url: `${SITE_URL}/legal/refund`, changeFrequency: "yearly", priority: 0.2 },
+    { url: `${SITE_URL}/tools/ai-readiness-checker`, lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/tools/freelance-readiness-checker`, lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${SITE_URL}/tools/production-readiness-checker`, lastModified: contentLastModified, changeFrequency: "weekly", priority: 0.9 },
   ];
 
   const acquisitionRoutes: MetadataRoute.Sitemap = ACQUISITION_SLUGS.map((slug) => ({
