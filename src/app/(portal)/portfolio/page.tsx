@@ -22,6 +22,7 @@ import { QualityLabsPanel } from "@/components/profile/quality-labs-panel";
 import { AiEvaluationStudio } from "@/components/profile/ai-evaluation-studio";
 import { EvidencePanel } from "@/components/profile/evidence-panel";
 import { ProductionReadinessCard } from "@/components/profile/production-readiness-card";
+import { GraduationReplayPanel } from "@/components/profile/graduation-replay-panel";
 import { getGitHubConnectionSummary } from "@/lib/github";
 import type {
   CapstoneReviewRow,
@@ -294,6 +295,7 @@ export default async function PortfolioPage() {
                   hasArchitecture={Boolean(item.architecture_note)}
                 />
                 <ProductionReadinessCard portfolioItemId={item.id} initialDeploymentUrl={item.deployment_url} />
+                <GraduationReplayPanel portfolioItemId={item.id} />
                 <ProjectDecisions portfolioItemId={item.id} decisions={decisionsByItem.get(item.id) ?? []} />
                 <ProjectCheckpoints portfolioItemId={item.id} checkpoints={checkpointsByItem.get(item.id) ?? []} />
                 <PortfolioCaseStudy portfolioItemId={item.id} caseStudy={caseStudyByItem.get(item.id) ?? null} />
