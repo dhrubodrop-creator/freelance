@@ -1,0 +1,43 @@
+{
+  "generated_by": "manual audit pass, mechanical duplicate detection + real web research for high-severity cases",
+  "note": "old_url/new_url pairs were verified real: found via WebSearch, confirmed live via WebFetch (matching page <title>) before being written to the database. No URL in this file was invented.",
+  "fixed": [
+    { "course": "Generative AI (GenAI)", "module": "RAG & Grounding", "old_url": "https://www.youtube.com/watch?v=DOXJ7s1D6iE", "new_url": "https://www.youtube.com/watch?v=vT-DpLvf29Q", "new_title": "Complete RAG Tutorial 2026 (Free Labs)", "duplicate_status": "was CLEAR_PLACEHOLDER (20-module cross-course reuse)", "objective_match": "direct", "status": "REPLACED" },
+    { "course": "Data Science with Generative AI", "module": "RAG for Analytics", "old_url": "https://www.youtube.com/watch?v=DOXJ7s1D6iE", "new_url": "https://www.youtube.com/watch?v=vT-DpLvf29Q", "new_title": "Complete RAG Tutorial 2026 (Free Labs)", "duplicate_status": "was CLEAR_PLACEHOLDER", "objective_match": "partial — RAG fundamentals only, not analytics-specific", "status": "REPLACED_REVIEW_REQUIRED" },
+    { "course": "GCP AI", "module": "RAG & Deployment", "old_url": "https://www.youtube.com/watch?v=DOXJ7s1D6iE", "new_url": "https://www.youtube.com/watch?v=vT-DpLvf29Q", "new_title": "Complete RAG Tutorial 2026 (Free Labs)", "duplicate_status": "was CLEAR_PLACEHOLDER", "objective_match": "partial — RAG only, not the GCP deployment half", "status": "REPLACED_REVIEW_REQUIRED" },
+    { "course": "Generative AI (GenAI)", "module": "Prompting & Structured Outputs", "old_url": "https://www.youtube.com/watch?v=DOXJ7s1D6iE", "new_url": "https://www.youtube.com/watch?v=xPVhkBg87Sk", "new_title": "Prompt Engineering Full Course for Beginners by IBM", "duplicate_status": "was CLEAR_PLACEHOLDER", "objective_match": "direct", "status": "REPLACED" },
+    { "course": "AI Stack", "module": "Model & Prompting Layer", "old_url": "https://www.youtube.com/watch?v=DOXJ7s1D6iE", "new_url": "https://www.youtube.com/watch?v=xPVhkBg87Sk", "new_title": "Prompt Engineering Full Course for Beginners by IBM", "duplicate_status": "was CLEAR_PLACEHOLDER", "objective_match": "partial — prompting half only, not model-selection half", "status": "REPLACED_REVIEW_REQUIRED" },
+    { "course": "MLOps (Machine Learning Operations)", "modules": ["MLOps Foundations", "Data & Model Pipelines", "Deployment & Containerization", "Monitoring & Production Operations"], "old_url": "https://www.youtube.com/watch?v=dPmH3G9NQtY", "new_url": "https://www.youtube.com/watch?v=UuR8gjcRIeg", "new_title": "MLOps Using GCP Explained | End-to-End ML Pipeline on Google Cloud", "duplicate_status": "was CLEAR_PLACEHOLDER (unrelated topic)", "objective_match": "course-level only — all 4 modules still share one video", "status": "IMPROVED_REVIEW_REQUIRED" },
+    { "course": "LLMOps", "modules": ["Prompt & Model Lifecycle Management", "Evaluation at Scale", "Deployment & Infrastructure", "Production Case Project"], "old_url": "https://www.youtube.com/watch?v=cqpzyD7ikZQ", "new_url": "https://www.youtube.com/watch?v=cvPEiPt7HXo", "new_title": "Large Language Model Operations (LLMOps) Explained", "duplicate_status": "was CLEAR_PLACEHOLDER", "objective_match": "course-level only", "status": "IMPROVED_REVIEW_REQUIRED" },
+    { "course": "AWS AI", "modules": ["AI/ML Fundamentals on AWS (AIF-C01 track)", "Bedrock & SageMaker", "Data & Security for AI on AWS", "Certification Push"], "old_url": "https://www.youtube.com/watch?v=4rF3xsCeJHQ", "new_url": "https://www.youtube.com/watch?v=WZeZZ8_W-M4", "new_title": "AWS Certified AI Practitioner (AIF-C01) – Full Course to PASS the Certification Exam", "duplicate_status": "was CLEAR_PLACEHOLDER", "objective_match": "course-level only", "status": "IMPROVED_REVIEW_REQUIRED" }
+  ],
+  "review_required_not_fixed": [
+    { "url": "https://www.youtube.com/watch?v=DOXJ7s1D6iE", "modules_remaining": 15, "courses": ["AI Stack", "Data Science (AI & ML)", "Data Science with Generative AI", "GCP AI"], "duplicate_status": "CLEAR_PLACEHOLDER", "reason_not_fixed": "Time-bounded pass — fixed the 2 clearest topic matches (RAG, Prompting); remaining 15 modules cover distinct topics (Data Foundations, Core ML, Evaluation, Fine-Tuning, Model & Prompting, Serving, Full-Stack Integration, Vertex AI, etc.) each needing individual research." },
+    { "url": "https://www.youtube.com/watch?v=K269GcnN-t4", "modules_remaining": 5, "courses": ["Agentic AI", "Azure AI"], "duplicate_status": "SUSPICIOUS_DUPLICATE — spans 2 unrelated courses", "reason_not_fixed": "Not researched this pass." },
+    { "url": "https://www.youtube.com/watch?v=JojcJe5dJTI", "modules_remaining": 4, "courses": ["AI LLM Testing"], "duplicate_status": "CLEAR_PLACEHOLDER (all 4 modules of one course)", "reason_not_fixed": "Not researched this pass." },
+    { "url": "https://www.youtube.com/watch?v=Hz21KVo0t4E", "modules_remaining": 2, "courses": ["Agentic AI Development with LangChain & LangGraph"], "duplicate_status": "UNCLASSIFIED — needs topic comparison" },
+    { "url": "https://www.youtube.com/watch?v=HR1lI4V0oKE", "modules_remaining": 2, "courses": ["Claude Code AI"], "duplicate_status": "UNCLASSIFIED" },
+    { "url": "https://www.youtube.com/watch?v=tmt7742tP74", "modules_remaining": 2, "courses": ["AI Engineering for Forward Deployed Engineer"], "duplicate_status": "UNCLASSIFIED" },
+    { "url": "https://www.youtube.com/watch?v=OXq6sNIqkFY", "modules_remaining": 2, "courses": ["AI Engineering for Forward Deployed Engineer"], "duplicate_status": "UNCLASSIFIED" },
+    { "url": "https://www.youtube.com/watch?v=eQNkwr82KVo", "modules_remaining": 2, "courses": ["AI Agents with n8n (No-Code)"], "duplicate_status": "UNCLASSIFIED" },
+    { "url": "https://www.youtube.com/watch?v=Ey18PDiaAYI", "modules_remaining": 2, "courses": ["AI Agents with n8n (No-Code)"], "duplicate_status": "UNCLASSIFIED" },
+    { "url": "https://www.youtube.com/watch?v=GuaKeDS6UKU", "modules_remaining": 2, "courses": ["AI Agents with n8n (No-Code)"], "duplicate_status": "UNCLASSIFIED" },
+    { "url": "https://www.youtube.com/watch?v=gG_AD3ba8mg", "modules_remaining": 2, "courses": ["AI Agents for DevOps Engineers"], "duplicate_status": "UNCLASSIFIED" },
+    { "url": "https://www.youtube.com/watch?v=GThudNtXHRA", "modules_remaining": 2, "courses": ["AI Agents for DevOps Engineers"], "duplicate_status": "UNCLASSIFIED" },
+    { "url": "https://www.youtube.com/playlist?list=PLEBv0Ny-VjalwPAjEK3suyNnv28YtvDd_", "modules_remaining": 2, "courses": ["AIOps"], "duplicate_status": "UNCLASSIFIED — this is a playlist, potentially a legitimate shared reference" },
+    { "url": "https://www.youtube.com/watch?v=-JqW619Zljo", "modules_remaining": 2, "courses": ["AIOps"], "duplicate_status": "UNCLASSIFIED" },
+    { "url": "https://www.youtube.com/playlist?list=PL-q2MNxDekiSkjtdqrenGA9YfcCqrrDfU", "modules_remaining": 2, "courses": ["AI Product Management"], "duplicate_status": "UNCLASSIFIED — playlist, potentially legitimate" },
+    { "url": "https://www.youtube.com/watch?v=KjYCEiBTHFo", "modules_remaining": 2, "courses": ["AI Product Management"], "duplicate_status": "UNCLASSIFIED" },
+    { "url": "https://www.youtube.com/watch?v=4lI1PRV4Yj4", "modules_remaining": 2, "courses": ["AI Security"], "duplicate_status": "UNCLASSIFIED" }
+  ],
+  "summary": {
+    "duplicate_groups_before": 20,
+    "duplicate_groups_after": 22,
+    "note_on_count_increase": "Total group COUNT rose (20->22) because splitting the one 20-module placeholder into 2 new targeted groups (RAG video used 3x, Prompting video used 2x) plus 3 course-level replacements each created their own new group — but the WORST single defect (one video across 5 unrelated courses/20 modules) shrank from 20 modules to 15, and 2 modules now have topically-correct, individually-verified videos instead of a random cross-topic placeholder.",
+    "worst_offender_before": "1 URL used by 20 modules across 5 unrelated courses",
+    "worst_offender_after": "1 URL used by 15 modules across 4 unrelated courses",
+    "modules_genuinely_fixed_with_specific_video": 2,
+    "modules_improved_to_course_correct_but_still_shared": 15,
+    "modules_still_requiring_review": 69
+  }
+}
