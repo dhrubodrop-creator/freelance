@@ -9,6 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { OutcomeCandidate } from "@/lib/outcome-engine";
 
+// Mirrors lib/outcome-engine.ts's toIfIWereYou() exactly, duplicated here (not imported)
+// because that module is server-only — this is a plain template restatement of the
+// already-ranked candidate's own `why`, not a second ranking system.
+function toIfIWereYou(candidate: OutcomeCandidate): string {
+  return `If I were you, I'd do this next: ${candidate.why}`;
+}
+
 const ACTION_LABEL: Record<string, string> = {
   take_diagnostic: "Diagnostic",
   complete_module: "Learning",
@@ -50,7 +57,7 @@ export function NextBestMoveCard({ move }: { move: OutcomeCandidate }) {
         >
           <HelpCircle className="size-3.5" /> Why?
         </button>
-        {showWhy && <p className="text-sm text-muted-foreground">{move.why}</p>}
+        {showWhy && <p className="text-sm text-muted-foreground">{toIfIWereYou(move)}</p>}
         <Button asChild variant="accent" className="w-fit gap-1.5">
           <Link href={move.href}>
             Do this now <ArrowRight className="size-4" />

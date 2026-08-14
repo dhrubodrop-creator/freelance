@@ -64,6 +64,16 @@ export default async function CourseDetailPage({ params }: Props) {
     .eq("course_id", course.id)
     .maybeSingle();
 
+  // Public Course Value Preview — concrete, non-promissory. Built only from this course's
+  // real module/capstone data, never a generic marketing claim.
+  const deliverables = Array.from(new Set(modules.map((m) => m.build_deliverable).filter((d): d is string => Boolean(d))));
+  const ownedArtifacts = [
+    ...deliverables.map((d) => `A working project: ${d}`),
+    ...(capstoneData ? [`A completed capstone: ${capstoneData.title}, scored across multiple dimensions`] : []),
+    "A portfolio entry documenting how you built it, not just that you finished",
+    "Verified skill evidence — tied to real work, not a self-rating",
+  ];
+
   const courseJsonLd = {
     "@context": "https://schema.org",
     "@type": "Course",
@@ -181,6 +191,24 @@ export default async function CourseDetailPage({ params }: Props) {
       </Section>
 
       <Section>
+        <Container>
+          <h2 className="mb-2 font-heading text-h3 font-bold">What you will own</h2>
+          <p className="mb-6 max-w-2xl text-muted-foreground">
+            Not a promise — a concrete list of what you personally build and can show a buyer, pulled from this
+            course&rsquo;s real curriculum.
+          </p>
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {ownedArtifacts.map((item) => (
+              <li key={item} className="flex items-start gap-2.5 rounded-lg border border-border bg-card px-4 py-3 text-sm">
+                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </Section>
+
+      <Section className="bg-muted/40">
         <Container>
           <h2 className="mb-2 font-heading text-h3 font-bold">What you&rsquo;ll prove — and own — by the end</h2>
           <p className="mb-6 max-w-2xl text-muted-foreground">

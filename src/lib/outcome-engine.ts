@@ -292,3 +292,12 @@ export async function getNextBestMove(userId: string): Promise<OutcomeCandidate>
 export async function getReadyPlan(userId: string): Promise<OutcomeCandidate[]> {
   return buildOutcomeCandidates(userId);
 }
+
+/**
+ * Value-layer P1 — "If I were you" framing. A template restatement of the
+ * already-ranked top candidate's own `why`, not a new opinion or a second
+ * ranking system — the ranking logic lives once, in buildOutcomeCandidates.
+ */
+export function toIfIWereYou(candidate: OutcomeCandidate): string {
+  return `If I were you, I'd do this next: ${candidate.why}`;
+}

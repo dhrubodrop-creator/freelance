@@ -13,12 +13,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { ProposalRow } from "@/types/db";
 
-/** Post-audit P1 fix — the monetisation journey previously dead-ended at a checklist; this gives it a real next action. */
-export function ProposalGeneratorDialog({ portfolioItems }: { portfolioItems: { id: string; title: string }[] }) {
-  const [open, setOpen] = React.useState(false);
-  const [portfolioItemId, setPortfolioItemId] = React.useState<string>("");
-  const [serviceType, setServiceType] = React.useState("");
-  const [buyerType, setBuyerType] = React.useState("");
+/**
+ * Post-audit P1 fix — the monetisation journey previously dead-ended at a checklist; this gives it a real next action.
+ * Value-layer wiring: accepts a prefill (from an offer on /what-can-i-sell or a project's asset factory) so the
+ * Project -> Offer -> Proposal journey doesn't dead-end into a blank form the user has to re-fill from scratch.
+ */
+export function ProposalGeneratorDialog({
+  portfolioItems,
+  prefill,
+  autoOpen,
+}: {
+  portfolioItems: { id: string; title: string }[];
+  prefill?: { portfolioItemId?: string; serviceType?: string; buyerType?: string };
+  autoOpen?: boolean;
+}) {
+  const [open, setOpen] = React.useState(Boolean(autoOpen));
+  const [portfolioItemId, setPortfolioItemId] = React.useState<string>(prefill?.portfolioItemId ?? "");
+  const [serviceType, setServiceType] = React.useState(prefill?.serviceType ?? "");
+  const [buyerType, setBuyerType] = React.useState(prefill?.buyerType ?? "");
   const [pricingNotes, setPricingNotes] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [proposal, setProposal] = React.useState<ProposalRow | null>(null);

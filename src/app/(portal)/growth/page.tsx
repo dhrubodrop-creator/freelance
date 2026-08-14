@@ -1,45 +1,59 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Flame, Rocket, Sparkles, TestTube2, Trophy } from "lucide-react";
+import { Flame, Rocket, Sparkles, TestTube2, Trophy, XCircle } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/current-user";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { computeMasteryForSkills, loadUserMasterySourceData } from "@/lib/mastery";
+import { computeMasteryForSkills, explainSkillEvidence, loadUserMasterySourceData } from "@/lib/mastery";
 import { computeMomentum } from "@/lib/momentum";
 import { generateWeeklyBuildStory } from "@/lib/weekly-story";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import type { MasteryLevel, SkillCategoryRow, SkillRow } from "@/types/db";
-
-const LEVEL_VARIANT: Record<MasteryLevel, "outline" | "accent" | "success"> = {
-  not_started: "outline",
-  learning: "outline",
-  practicing: "outline",
-  demonstrated: "success",
-  strong: "accent",
-};
+import { SkillEvidenceBadge } from "@/components/portal/skill-evidence-badge";
+import type { SkillCategoryRow, SkillRow } from "@/types/db";
 
 export default async function GrowthPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
 
   const supabase = supabaseAdmin();
-  const [{ data: categories }, { data: skills }, masteryData, momentum, story] = await Promise.all([
+  const [{ data: categories }, { data: skills }, masteryData, momentum, story, { data: enrollments }] = await Promise.all([
     supabase.from("skill_categories").select("*").order("name"),
     supabase.from("skills").select("*").order("name"),
     loadUserMasterySourceData(user.id),
     computeMomentum(user.id),
     generateWeeklyBuildStory(user.id),
+    supabase.from("enrollments").select("course_id, courses(id, title)").eq("user_id", user.id).eq("status", "active"),
   ]);
 
   const allSkills = (skills ?? []) as SkillRow[];
   const mastery = computeMasteryForSkills(allSkills.map((s) => s.id), masteryData);
-  const masteryBySkill = new Map(mastery.map((m) => [m.skillId, m.level]));
+  const masteryBySkill = new Map(mastery.map((m) => [m.skillId, m]));
   const skillsByCategory = new Map<string, SkillRow[]>();
   for (const skill of allSkills) {
     const list = skillsByCategory.get(skill.category_id) ?? [];
     list.push(skill);
     skillsByCategory.set(skill.category_id, list);
+  }
+
+  // Value-layer P1 — "Don't learn this yet": skills genuinely outside the learner's
+  // current active course, deterministically, not an AI opinion. Skipped entirely
+  // (not guessed) when there's no active course to compare against.
+  const activeEnrollment = (enrollments ?? [])[0] as unknown as { course_id: string; courses: { id: string; title: string } | null } | undefined;
+  let dontLearnYet: { name: string }[] = [];
+  let activeCourseTitle: string | null = null;
+  if (activeEnrollment?.courses) {
+    activeCourseTitle = activeEnrollment.courses.title;
+    const { data: activeModules } = await supabase.from("modules").select("id").eq("course_id", activeEnrollment.course_id);
+    const activeModuleIds = new Set((activeModules ?? []).map((m) => m.id));
+    const { data: activeModuleSkills } = await supabase
+      .from("module_skills")
+      .select("skill_id, module_id")
+      .in("module_id", Array.from(activeModuleIds).length ? Array.from(activeModuleIds) : [""]);
+    const activeCourseSkillIds = new Set((activeModuleSkills ?? []).map((r) => r.skill_id));
+    dontLearnYet = allSkills
+      .filter((s) => !activeCourseSkillIds.has(s.id) && (masteryBySkill.get(s.id)?.level ?? "not_started") === "not_started")
+      .slice(0, 6)
+      .map((s) => ({ name: s.name }));
   }
 
   return (
@@ -92,7 +106,9 @@ export default async function GrowthPage() {
           <CardTitle className="flex items-center gap-2 text-base">
             <Sparkles className="size-4 text-accent-600" /> Skill tree
           </CardTitle>
-          <CardDescription>Lit up only where you have real evidence — self-ratings alone don&rsquo;t count.</CardDescription>
+          <CardDescription>
+            Lit up only where you have real evidence — self-ratings alone don&rsquo;t count. Click any skill to see why.
+          </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
           {((categories ?? []) as SkillCategoryRow[]).map((category) => {
@@ -105,12 +121,10 @@ export default async function GrowthPage() {
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {categorySkills.map((skill) => {
-                    const level = masteryBySkill.get(skill.id) ?? "not_started";
-                    return (
-                      <Badge key={skill.id} variant={LEVEL_VARIANT[level]} className={level === "not_started" ? "opacity-40" : ""}>
-                        {skill.name}
-                      </Badge>
-                    );
+                    const m = masteryBySkill.get(skill.id);
+                    const level = m?.level ?? "not_started";
+                    const explanation = explainSkillEvidence(m?.evidence ?? { studied: false, practiced: false, project: false });
+                    return <SkillEvidenceBadge key={skill.id} name={skill.name} level={level} explanation={explanation} />;
                   })}
                 </div>
               </div>
@@ -118,6 +132,26 @@ export default async function GrowthPage() {
           })}
         </CardContent>
       </Card>
+
+      {dontLearnYet.length > 0 && activeCourseTitle && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <XCircle className="size-4 text-muted-foreground" /> Don&rsquo;t learn this yet
+            </CardTitle>
+            <CardDescription>
+              Not part of {activeCourseTitle} — staying focused on your current track beats spreading thin.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {dontLearnYet.map((s) => (
+              <span key={s.name} className="rounded-full border border-dashed border-border px-3 py-1 text-micro text-muted-foreground">
+                {s.name}
+              </span>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Link href="/reality-check" className="block">
         <Card className="border-primary-100 bg-primary-50/30 transition-colors hover:bg-primary-50/60">

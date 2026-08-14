@@ -33,9 +33,15 @@ import type {
 type RecommendationWithCourse = RecommendationRow & { course: CourseRow | null };
 type EnrollmentWithCourse = EnrollmentRow & { course: CourseRow | null };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ openProposal?: string; portfolioItemId?: string; serviceType?: string; buyerType?: string }>;
+}) {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
+
+  const params = (await searchParams) ?? {};
 
   void checkAndCelebrateMilestones(user.id);
   const readyPlan = await getReadyPlan(user.id);
@@ -159,7 +165,17 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      <MonetisationInsightCard plan={plan} actions={actions} portfolioItems={portfolioRows ?? []} />
+      <MonetisationInsightCard
+        plan={plan}
+        actions={actions}
+        portfolioItems={portfolioRows ?? []}
+        autoOpenProposal={params.openProposal === "1"}
+        proposalPrefill={{
+          portfolioItemId: params.portfolioItemId,
+          serviceType: params.serviceType,
+          buyerType: params.buyerType,
+        }}
+      />
 
       {recommendedCourse && !enrolledCourseIds.has(recommendedCourse.id) && (
         <Card className="border-accent/40 bg-gradient-to-br from-accent-50 to-background">

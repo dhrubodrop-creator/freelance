@@ -174,6 +174,15 @@ export default async function AssetsPage() {
       </Section>
 
       <Section title="Business" icon={Briefcase}>
+        <div className="mb-3 flex flex-wrap gap-2">
+          <Link href="/what-can-i-sell" className="text-sm font-medium text-accent-600 hover:underline">
+            What can I sell? →
+          </Link>
+          <span className="text-muted-foreground">·</span>
+          <Link href="/one-person-business" className="text-sm font-medium text-accent-600 hover:underline">
+            One-person business OS →
+          </Link>
+        </div>
         {!monetisationPlan && (proposals ?? []).length === 0 ? (
           <EmptyNote>No service offers or proposals yet — generate a monetisation plan from your dashboard first.</EmptyNote>
         ) : (

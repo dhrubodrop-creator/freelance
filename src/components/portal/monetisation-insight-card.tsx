@@ -17,10 +17,14 @@ export function MonetisationInsightCard({
   plan,
   actions,
   portfolioItems,
+  proposalPrefill,
+  autoOpenProposal,
 }: {
   plan: MonetisationPlanRow | null;
   actions: MonetisationActionRow[];
   portfolioItems: { id: string; title: string }[];
+  proposalPrefill?: { portfolioItemId?: string; serviceType?: string; buyerType?: string };
+  autoOpenProposal?: boolean;
 }) {
   const router = useRouter();
   const [generating, setGenerating] = React.useState(false);
@@ -161,7 +165,7 @@ export function MonetisationInsightCard({
           <p className="text-micro text-muted-foreground">
             Illustrative and personalised to your current profile — not a guarantee of income or a job offer.
           </p>
-          <ProposalGeneratorDialog portfolioItems={portfolioItems} />
+          <ProposalGeneratorDialog portfolioItems={portfolioItems} prefill={proposalPrefill} autoOpen={autoOpenProposal} />
         </div>
       </CardContent>
     </Card>

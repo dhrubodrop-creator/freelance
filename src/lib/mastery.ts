@@ -35,6 +35,28 @@ export function isVerifiedMasteryLevel(level: MasteryLevel): boolean {
   return level === "demonstrated" || level === "strong";
 }
 
+/**
+ * Value-layer P1 — "why do you think I know this?" Template text built only
+ * from the same three evidence booleans computeSkillMasteryLevel already
+ * derives; no new query, no AI call, and it can never say anything the
+ * badge's own color doesn't already imply.
+ */
+export function explainSkillEvidence(evidence: { studied: boolean; practiced: boolean; project: boolean }): string {
+  if (evidence.project && evidence.practiced) {
+    return "You have a portfolio project tagged with this skill, and you completed a practice exercise for it — that combination is why this shows as Strong.";
+  }
+  if (evidence.project) {
+    return "A portfolio project is tagged with this skill — that real evidence is why this shows as Demonstrated.";
+  }
+  if (evidence.practiced) {
+    return "You completed a practice exercise that maps to this skill — that's why this shows as Practicing. It moves to Demonstrated once a project uses it.";
+  }
+  if (evidence.studied) {
+    return "You completed the module(s) that teach this skill, but haven't practiced or proven it yet — that's why this shows as Learning, not further.";
+  }
+  return "No module, exercise, or project evidence yet — this skill hasn't started.";
+}
+
 export interface MasterySourceData {
   /** skill_id -> module ids that teach it */
   moduleIdsBySkill: Map<string, string[]>;

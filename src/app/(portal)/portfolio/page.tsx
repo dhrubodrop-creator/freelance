@@ -23,6 +23,7 @@ import { AiEvaluationStudio } from "@/components/profile/ai-evaluation-studio";
 import { EvidencePanel } from "@/components/profile/evidence-panel";
 import { ProductionReadinessCard } from "@/components/profile/production-readiness-card";
 import { GraduationReplayPanel } from "@/components/profile/graduation-replay-panel";
+import { ProjectAssetFactoryPanel } from "@/components/profile/project-asset-factory-panel";
 import { ExpandableGroup } from "@/components/profile/expandable-group";
 import { getGitHubConnectionSummary } from "@/lib/github";
 import type {
@@ -281,6 +282,7 @@ export default async function PortfolioPage() {
                     ))}
                   </div>
                 )}
+                <ProjectAssetFactoryPanel portfolioItemId={item.id} />
                 <ProjectDecisions portfolioItemId={item.id} decisions={decisionsByItem.get(item.id) ?? []} />
                 <ProjectCheckpoints portfolioItemId={item.id} checkpoints={checkpointsByItem.get(item.id) ?? []} />
                 <PortfolioCaseStudy portfolioItemId={item.id} caseStudy={caseStudyByItem.get(item.id) ?? null} />
