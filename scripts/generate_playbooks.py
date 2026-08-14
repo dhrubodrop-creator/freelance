@@ -5,6 +5,7 @@ table to point at the new PDF. Run: python3 scripts/generate_playbooks.py
 """
 import os
 import re
+import sys
 import requests
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.units import inch
@@ -802,6 +803,9 @@ def build_pdf(course, modules, industry):
 
 def main():
     courses = fetch_all("courses", "id,slug,title,description,track", "&order=title")
+    only_slugs = set(sys.argv[1:])
+    if only_slugs:
+        courses = [c for c in courses if c["slug"] in only_slugs]
     for course in courses:
         modules = fetch_all(
             "modules",
