@@ -52,6 +52,7 @@ const isProtectedRoute = createRouteMatcher([
   "/api/ai-evaluation(.*)",
   "/api/simulations(.*)",
   "/simulations(.*)",
+  "/api/proof(.*)",
 ]);
 
 const protectedMiddleware = clerkMiddleware(async (auth) => {

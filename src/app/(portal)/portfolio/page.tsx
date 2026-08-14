@@ -20,6 +20,7 @@ import { CodeCoachPanel } from "@/components/profile/code-coach-panel";
 import { DefinitionOfDonePanel } from "@/components/profile/definition-of-done-panel";
 import { QualityLabsPanel } from "@/components/profile/quality-labs-panel";
 import { AiEvaluationStudio } from "@/components/profile/ai-evaluation-studio";
+import { EvidencePanel } from "@/components/profile/evidence-panel";
 import { getGitHubConnectionSummary } from "@/lib/github";
 import type {
   CapstoneReviewRow,
@@ -286,6 +287,11 @@ export default async function PortfolioPage() {
                 />
                 <QualityLabsPanel portfolioItemId={item.id} repoFullName={repoByItem.get(item.id) ?? null} />
                 <AiEvaluationStudio portfolioItemId={item.id} />
+                <EvidencePanel
+                  portfolioItemId={item.id}
+                  repoFullName={repoByItem.get(item.id) ?? null}
+                  hasArchitecture={Boolean(item.architecture_note)}
+                />
                 <ProjectDecisions portfolioItemId={item.id} decisions={decisionsByItem.get(item.id) ?? []} />
                 <ProjectCheckpoints portfolioItemId={item.id} checkpoints={checkpointsByItem.get(item.id) ?? []} />
                 <PortfolioCaseStudy portfolioItemId={item.id} caseStudy={caseStudyByItem.get(item.id) ?? null} />

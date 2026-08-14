@@ -88,6 +88,8 @@ export interface PortfolioItemRow {
   outcome: string | null;
   links: string[];
   architecture_note: string | null;
+  architecture_diagram_mermaid: string | null;
+  architecture_diagram_generated_at: string | null;
   created_at: string;
 }
 
@@ -550,6 +552,13 @@ export interface SimulationSessionRow {
   completed_at: string | null;
 }
 
+export interface ProofShareTokenRow {
+  id: string;
+  user_id: string;
+  token: string;
+  created_at: string;
+}
+
 export interface GitHubConnectionRow {
   id: string;
   user_id: string;
@@ -899,6 +908,11 @@ export interface Database {
         Row: SimulationSessionRow;
         Insert: Partial<SimulationSessionRow>;
         Update: Partial<SimulationSessionRow>;
+      };
+      proof_share_tokens: {
+        Row: ProofShareTokenRow;
+        Insert: Partial<ProofShareTokenRow>;
+        Update: Partial<ProofShareTokenRow>;
       };
     };
   };

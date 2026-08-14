@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { computeMasteryForSkills, loadUserMasterySourceData } from "@/lib/mastery";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ProofShareLinkCard } from "@/components/profile/proof-share-link-card";
 import type { CapstoneReviewRow, CapstoneSubmissionRow, CourseCapstoneRow, SkillRow } from "@/types/db";
 
 export default async function ProofProfilePage() {
@@ -30,6 +31,8 @@ export default async function ProofProfilePage() {
       .eq("approved", true),
     supabase.from("capstone_submissions").select("*").eq("user_id", user.id).eq("status", "reviewed"),
   ]);
+
+  const { data: shareTokenRow } = await supabase.from("proof_share_tokens").select("token").eq("user_id", user.id).maybeSingle();
 
   const allSkills = (skills ?? []) as SkillRow[];
   const mastery = computeMasteryForSkills(allSkills.map((s) => s.id), masteryData);
@@ -71,6 +74,8 @@ export default async function ProofProfilePage() {
           (completed modules, practiced exercises, real projects), not self-reported claims.
         </p>
       </div>
+
+      <ProofShareLinkCard initialToken={shareTokenRow?.token ?? null} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
