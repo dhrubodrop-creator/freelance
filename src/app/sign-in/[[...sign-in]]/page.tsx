@@ -1,12 +1,17 @@
 import { ClerkProvider, SignIn } from "@clerk/nextjs";
+import { redirect } from "next/navigation";
 
 import { AuthShell } from "@/components/shared/auth-shell";
 import { clerkAppearance } from "@/lib/clerk-appearance";
+import { getCurrentUser } from "@/lib/current-user";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Sign in", alternates: { canonical: null }, robots: { index: false, follow: false, nocache: true } };
 
-export default function SignInPage() {
+export default async function SignInPage() {
+  const user = await getCurrentUser();
+  if (user) redirect(user.profile_completed ? "/dashboard" : "/onboarding");
+
   return (
     <ClerkProvider>
       <AuthShell

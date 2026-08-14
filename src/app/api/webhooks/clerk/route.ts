@@ -5,6 +5,7 @@ import type { WebhookEvent } from "@clerk/nextjs/server";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { logEvent } from "@/lib/analytics";
+import { provisionAppUser } from "@/lib/user-provisioning";
 
 export async function POST(req: Request) {
   const secret = process.env.CLERK_WEBHOOK_SECRET;
@@ -47,27 +48,27 @@ export async function POST(req: Request) {
     )?.phone_number;
     const name = [user.first_name, user.last_name].filter(Boolean).join(" ") || null;
 
-    const { data: syncedUser } = await supabase
-      .from("users")
-      .upsert(
+    try {
+      const syncedUser = await provisionAppUser(
         {
-          clerk_id: user.id,
+          clerkId: user.id,
           name,
           email: primaryEmail ?? null,
           phone: primaryPhone ?? null,
         },
-        { onConflict: "clerk_id" }
-      )
-      .select("id")
-      .single();
-
-    if (event.type === "user.created" && syncedUser) {
-      await logEvent(syncedUser.id, "signup", { source: "clerk_webhook" });
+        "clerk_webhook"
+      );
+      if (event.type === "user.created") {
+        await logEvent(syncedUser.id, "signup", { source: "clerk_webhook" });
+      }
+    } catch {
+      return NextResponse.json({ error: "User synchronization failed" }, { status: 500 });
     }
   }
 
   if (event.type === "user.deleted" && event.data.id) {
-    await supabase.from("users").delete().eq("clerk_id", event.data.id);
+    const { error } = await supabase.from("users").delete().eq("clerk_id", event.data.id);
+    if (error) return NextResponse.json({ error: "User deletion synchronization failed" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

@@ -55,9 +55,10 @@ const isProtectedRoute = createRouteMatcher([
   "/api/proof(.*)",
   "/growth(.*)",
 ]);
+const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
 
-const protectedMiddleware = clerkMiddleware(async (auth) => {
-  await auth.protect();
+const authMiddleware = clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) await auth.protect();
 });
 
 export default function middleware(req: NextRequest, event: NextFetchEvent) {
@@ -68,8 +69,8 @@ export default function middleware(req: NextRequest, event: NextFetchEvent) {
     return NextResponse.redirect(canonicalUrl, 308);
   }
 
-  if (isProtectedRoute(req)) {
-    return protectedMiddleware(req, event);
+  if (isProtectedRoute(req) || isAuthRoute(req)) {
+    return authMiddleware(req, event);
   }
 
   return NextResponse.next();

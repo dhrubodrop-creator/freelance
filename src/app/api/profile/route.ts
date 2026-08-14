@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 
+import { getCurrentUser } from "@/lib/current-user";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { generateRecommendation } from "@/lib/recommend";
 import { logEvent } from "@/lib/analytics";
@@ -15,8 +15,8 @@ const profileSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const formData = await req.formData();
   const parsed = profileSchema.safeParse({
@@ -33,23 +33,13 @@ export async function POST(req: Request) {
 
   const supabase = supabaseAdmin();
 
-  const { data: user, error: userError } = await supabase
-    .from("users")
-    .select("*")
-    .eq("clerk_id", userId)
-    .maybeSingle();
-
-  if (userError || !user) {
-    return NextResponse.json({ error: "User record not found — try refreshing." }, { status: 404 });
-  }
-
   let cvFileUrl: string | null = null;
   const cvFile = formData.get("cv");
   if (cvFile instanceof File && cvFile.size > 0) {
     if (cvFile.type !== "application/pdf") {
       return NextResponse.json({ error: "CV must be a PDF" }, { status: 400 });
     }
-    const path = `${userId}/${Date.now()}-${cvFile.name}`;
+    const path = `${user.clerk_id}/${Date.now()}-${cvFile.name}`;
     const { error: uploadError } = await supabase.storage
       .from("cv-uploads")
       .upload(path, await cvFile.arrayBuffer(), { contentType: "application/pdf", upsert: true });
@@ -78,7 +68,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Could not save your profile — try again." }, { status: 500 });
   }
 
-  await supabase.from("users").update({ profile_completed: true }).eq("id", user.id);
+  const { error: completionError } = await supabase
+    .from("users")
+    .update({ profile_completed: true })
+    .eq("id", user.id);
+  if (completionError) {
+    console.error("[api/profile] profile completion update failed");
+    return NextResponse.json({ error: "Could not finish account setup — try again." }, { status: 500 });
+  }
   await logEvent(user.id, "onboarding_completed", { industry, careerGoal });
 
   const recommendation = await generateRecommendation(
@@ -118,8 +115,8 @@ const profileUpdateSchema = z.object({
 
 /** Ongoing profile edits (Phase 1) — separate from the one-time onboarding POST above. */
 export async function PATCH(req: Request) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
   const parsed = profileUpdateSchema.safeParse(body);
@@ -128,9 +125,6 @@ export async function PATCH(req: Request) {
   }
 
   const supabase = supabaseAdmin();
-  const { data: user } = await supabase.from("users").select("id").eq("clerk_id", userId).maybeSingle();
-  if (!user) return NextResponse.json({ error: "User record not found — try refreshing." }, { status: 404 });
-
   const v = parsed.data;
   const { error } = await supabase.from("profiles").upsert(
     {

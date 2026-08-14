@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
 import { ShieldCheck, Lock, BadgeCheck } from "lucide-react";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { getCurrentUser } from "@/lib/current-user";
 import { Container } from "@/components/shared/container";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Logo } from "@/components/shared/logo";
@@ -16,6 +17,9 @@ export const metadata: Metadata = { alternates: { canonical: null }, robots: { i
 
 export default async function CheckoutPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const user = await getCurrentUser();
+  if (!user) redirect(`/sign-in?redirect_url=${encodeURIComponent(`/checkout/${slug}`)}`);
+
   const supabase = supabaseAdmin();
   const { data: course } = await supabase.from("courses").select("*").eq("slug", slug).maybeSingle();
 
