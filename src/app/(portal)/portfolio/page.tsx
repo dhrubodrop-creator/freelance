@@ -17,12 +17,14 @@ import { CapstoneCard } from "@/components/profile/capstone-card";
 import { GitHubConnectionCard } from "@/components/profile/github-connection-card";
 import { GitHubRepoLink } from "@/components/profile/github-repo-link";
 import { CodeCoachPanel } from "@/components/profile/code-coach-panel";
+import { DefinitionOfDonePanel } from "@/components/profile/definition-of-done-panel";
 import { getGitHubConnectionSummary } from "@/lib/github";
 import type {
   CapstoneReviewRow,
   CapstoneSubmissionRow,
   CourseCapstoneRow,
   CourseRow,
+  AcceptanceCheckRow,
   PortfolioCaseStudyRow,
   PortfolioItemRow,
   ProjectCheckpointRow,
@@ -92,7 +94,7 @@ export default async function PortfolioPage() {
     }
   }
 
-  const [githubConnection, { data: repoLinkRows }] = await Promise.all([
+  const [githubConnection, { data: repoLinkRows }, { data: acceptanceCheckRows }] = await Promise.all([
     getGitHubConnectionSummary(user.id),
     portfolioItems.length > 0
       ? supabase.from("github_repo_links").select("portfolio_item_id, repo_full_name").in(
@@ -100,8 +102,21 @@ export default async function PortfolioPage() {
           portfolioItems.map((i) => i.id)
         )
       : Promise.resolve({ data: [] as { portfolio_item_id: string; repo_full_name: string }[] }),
+    portfolioItems.length > 0
+      ? supabase
+          .from("acceptance_checks")
+          .select("*")
+          .in("portfolio_item_id", portfolioItems.map((i) => i.id))
+          .order("order_index")
+      : Promise.resolve({ data: [] as AcceptanceCheckRow[] }),
   ]);
   const repoByItem = new Map((repoLinkRows ?? []).map((r) => [r.portfolio_item_id, r.repo_full_name]));
+  const acceptanceChecksByItem = new Map<string, AcceptanceCheckRow[]>();
+  for (const c of (acceptanceCheckRows ?? []) as AcceptanceCheckRow[]) {
+    const list = acceptanceChecksByItem.get(c.portfolio_item_id) ?? [];
+    list.push(c);
+    acceptanceChecksByItem.set(c.portfolio_item_id, list);
+  }
 
   const enrolledCourses = ((enrollmentRows ?? []) as unknown as { course_id: string; courses: CourseRow | null }[])
     .map((r) => r.courses)
@@ -261,7 +276,12 @@ export default async function PortfolioPage() {
                   </div>
                 )}
                 <GitHubRepoLink portfolioItemId={item.id} repoFullName={repoByItem.get(item.id) ?? null} />
-                <CodeCoachPanel repoFullName={repoByItem.get(item.id) ?? null} />
+                <CodeCoachPanel portfolioItemId={item.id} repoFullName={repoByItem.get(item.id) ?? null} />
+                <DefinitionOfDonePanel
+                  portfolioItemId={item.id}
+                  checks={acceptanceChecksByItem.get(item.id) ?? []}
+                  repoFullName={repoByItem.get(item.id) ?? null}
+                />
                 <ProjectDecisions portfolioItemId={item.id} decisions={decisionsByItem.get(item.id) ?? []} />
                 <ProjectCheckpoints portfolioItemId={item.id} checkpoints={checkpointsByItem.get(item.id) ?? []} />
                 <PortfolioCaseStudy portfolioItemId={item.id} caseStudy={caseStudyByItem.get(item.id) ?? null} />

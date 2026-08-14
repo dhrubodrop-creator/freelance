@@ -50,7 +50,11 @@ export type AITask =
   | "concept_rescue"
   | "idea_plan_generation"
   | "code_explanation"
-  | "debug_assistance";
+  | "debug_assistance"
+  | "code_review"
+  | "architecture_drift_check"
+  | "ai_code_defense"
+  | "test_generation";
 
 interface TaskConfig {
   maxOutputTokens: number;
@@ -200,6 +204,34 @@ const TASK_CONFIG: Record<AITask, TaskConfig> = {
     maxOutputTokens: envInt("AI_BUDGET_DEBUG_TOKENS", 1200),
     temperature: 0.3,
     timeoutMs: envInt("AI_TIMEOUT_MS_HIGH", 30_000),
+    maxRetries: 2,
+    cacheTtlMs: 0,
+  },
+  code_review: {
+    maxOutputTokens: envInt("AI_BUDGET_CODE_REVIEW_TOKENS", 1400),
+    temperature: 0.3,
+    timeoutMs: envInt("AI_TIMEOUT_MS_HIGH", 30_000),
+    maxRetries: 2,
+    cacheTtlMs: 0,
+  },
+  architecture_drift_check: {
+    maxOutputTokens: envInt("AI_BUDGET_ARCH_DRIFT_TOKENS", 1200),
+    temperature: 0.3,
+    timeoutMs: envInt("AI_TIMEOUT_MS_HIGH", 30_000),
+    maxRetries: 2,
+    cacheTtlMs: 0,
+  },
+  ai_code_defense: {
+    maxOutputTokens: envInt("AI_BUDGET_AI_DEFENSE_TOKENS", 1000),
+    temperature: 0.4,
+    timeoutMs: envInt("AI_TIMEOUT_MS_MED", 20_000),
+    maxRetries: 2,
+    cacheTtlMs: 0,
+  },
+  test_generation: {
+    maxOutputTokens: envInt("AI_BUDGET_TEST_GEN_TOKENS", 1800),
+    temperature: 0.3,
+    timeoutMs: envInt("AI_TIMEOUT_MS_CRITICAL", 40_000),
     maxRetries: 2,
     cacheTtlMs: 0,
   },

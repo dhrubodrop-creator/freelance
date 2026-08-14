@@ -87,6 +87,7 @@ export interface PortfolioItemRow {
   tools_used: string[];
   outcome: string | null;
   links: string[];
+  architecture_note: string | null;
   created_at: string;
 }
 
@@ -491,6 +492,44 @@ export interface ProjectCheckpointRow {
   created_at: string;
 }
 
+export type VerificationCheckType =
+  | "code_review"
+  | "architecture_drift"
+  | "test_generation"
+  | "visual_qa"
+  | "accessibility"
+  | "security"
+  | "performance"
+  | "ai_evaluation"
+  | "failure_replay";
+
+export interface ProjectVerificationRunRow {
+  id: string;
+  user_id: string;
+  portfolio_item_id: string | null;
+  check_type: VerificationCheckType;
+  input_summary: string;
+  results: Record<string, unknown>;
+  score: number | null;
+  blockers: string[];
+  created_at: string;
+}
+
+export type AcceptanceCheckType = "manual" | "http_200" | "http_auth_rejects" | "deployment_live";
+
+export interface AcceptanceCheckRow {
+  id: string;
+  portfolio_item_id: string;
+  description: string;
+  check_type: AcceptanceCheckType;
+  target_url: string | null;
+  last_result: "pass" | "fail" | null;
+  last_checked_at: string | null;
+  self_attested: boolean;
+  order_index: number;
+  created_at: string;
+}
+
 export interface GitHubConnectionRow {
   id: string;
   user_id: string;
@@ -826,6 +865,16 @@ export interface Database {
         Update: Partial<GitHubRepoLinkRow>;
       };
       github_events: { Row: GitHubEventRow; Insert: Partial<GitHubEventRow>; Update: Partial<GitHubEventRow> };
+      project_verification_runs: {
+        Row: ProjectVerificationRunRow;
+        Insert: Partial<ProjectVerificationRunRow>;
+        Update: Partial<ProjectVerificationRunRow>;
+      };
+      acceptance_checks: {
+        Row: AcceptanceCheckRow;
+        Insert: Partial<AcceptanceCheckRow>;
+        Update: Partial<AcceptanceCheckRow>;
+      };
     };
   };
 }
