@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Sora } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { ORGANIZATION_ID, safeJsonLd, SITE_URL, WEBSITE_ID } from "@/lib/seo";
 import "./globals.css";
 
@@ -108,7 +109,10 @@ export default function RootLayout({
         />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(websiteJsonLd) }} />
       </head>
-      <body className="min-h-screen bg-background font-sans text-foreground">{children}</body>
+      <body className="min-h-screen bg-background font-sans text-foreground">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
