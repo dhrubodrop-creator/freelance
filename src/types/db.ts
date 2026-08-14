@@ -443,6 +443,86 @@ export interface CatchupPlanRow {
   generated_at: string;
 }
 
+export interface IdeaUserStory {
+  role: string;
+  want: string;
+  soThat: string;
+}
+
+export interface IdeaMilestone {
+  name: string;
+  description: string;
+}
+
+export interface ProjectIdeaPlanRow {
+  id: string;
+  user_id: string;
+  course_id: string | null;
+  portfolio_item_id: string | null;
+  idea: string;
+  target_user: string;
+  problem: string;
+  desired_outcome: string;
+  optional_features: string[];
+  prd: string;
+  user_stories: IdeaUserStory[];
+  acceptance_criteria: string[];
+  architecture_proposal: string;
+  data_model: string;
+  milestones: IdeaMilestone[];
+  course_mapping: string | null;
+  suggested_repo_name: string;
+  readme_content: string;
+  env_template: string;
+  branch_strategy: string;
+  approved: boolean;
+  approved_at: string | null;
+  created_at: string;
+}
+
+export interface ProjectCheckpointRow {
+  id: string;
+  portfolio_item_id: string;
+  label: string;
+  task: string | null;
+  learner_note: string | null;
+  commit_sha: string | null;
+  state_snapshot: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface GitHubConnectionRow {
+  id: string;
+  user_id: string;
+  github_username: string;
+  access_token: string;
+  scopes: string[];
+  connected_at: string;
+  updated_at: string;
+}
+
+export interface GitHubRepoLinkRow {
+  id: string;
+  portfolio_item_id: string;
+  user_id: string;
+  repo_full_name: string;
+  default_branch: string;
+  connected_at: string;
+}
+
+export type GitHubEventType = "push" | "pull_request" | "workflow_run" | "deployment_status";
+
+export interface GitHubEventRow {
+  id: string;
+  user_id: string;
+  repo_full_name: string;
+  event_type: GitHubEventType;
+  summary: string;
+  meaningful: boolean;
+  external_id: string | null;
+  received_at: string;
+}
+
 export interface ModuleSkillRow {
   module_id: string;
   skill_id: string;
@@ -725,6 +805,27 @@ export interface Database {
         Update: Partial<ConceptRescueRequestRow>;
       };
       catchup_plans: { Row: CatchupPlanRow; Insert: Partial<CatchupPlanRow>; Update: Partial<CatchupPlanRow> };
+      project_idea_plans: {
+        Row: ProjectIdeaPlanRow;
+        Insert: Partial<ProjectIdeaPlanRow>;
+        Update: Partial<ProjectIdeaPlanRow>;
+      };
+      project_checkpoints: {
+        Row: ProjectCheckpointRow;
+        Insert: Partial<ProjectCheckpointRow>;
+        Update: Partial<ProjectCheckpointRow>;
+      };
+      github_connections: {
+        Row: GitHubConnectionRow;
+        Insert: Partial<GitHubConnectionRow>;
+        Update: Partial<GitHubConnectionRow>;
+      };
+      github_repo_links: {
+        Row: GitHubRepoLinkRow;
+        Insert: Partial<GitHubRepoLinkRow>;
+        Update: Partial<GitHubRepoLinkRow>;
+      };
+      github_events: { Row: GitHubEventRow; Insert: Partial<GitHubEventRow>; Update: Partial<GitHubEventRow> };
     };
   };
 }

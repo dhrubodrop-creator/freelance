@@ -150,7 +150,7 @@ export async function answerMentorQuestion(params: {
         supabase.from("module_skills").select("skills(name)").eq("module_id", params.moduleId),
         supabase
           .from("portfolio_items")
-          .select("title, problem, solution, outcome, links")
+          .select("id, title, problem, solution, outcome, links")
           .eq("user_id", params.userId)
           .eq("course_id", moduleRow.course_id)
           .limit(3),
@@ -171,6 +171,42 @@ export async function answerMentorQuestion(params: {
       }
       if (projectRows?.length) {
         parts.push(`Learner's course-linked project evidence: ${projectRows.map((project) => JSON.stringify(project)).join("\n")}`);
+
+        // Architecture decisions + real repo activity, when available — gives
+        // the coach "recent errors/architecture decisions/deployment state"
+        // context per the brief's context-aware-coach requirement, grounded
+        // in this learner's actual recorded data, never invented.
+        const projectIds = projectRows.map((p) => (p as { id: string }).id);
+        const [{ data: decisionRows }, { data: repoLinkRows }] = await Promise.all([
+          supabase
+            .from("project_decisions")
+            .select("decision, reasoning, portfolio_item_id")
+            .in("portfolio_item_id", projectIds)
+            .order("order_index")
+            .limit(5),
+          supabase.from("github_repo_links").select("repo_full_name, portfolio_item_id").in("portfolio_item_id", projectIds),
+        ]);
+        if (decisionRows?.length) {
+          parts.push(
+            `Architecture decisions the learner logged for this project: ${decisionRows
+              .map((d) => `${d.decision} — ${d.reasoning}`)
+              .join("; ")}`
+          );
+        }
+        if (repoLinkRows?.length) {
+          const repoNames = repoLinkRows.map((r) => r.repo_full_name);
+          const { data: eventRows } = await supabase
+            .from("github_events")
+            .select("repo_full_name, event_type, summary, meaningful, received_at")
+            .in("repo_full_name", repoNames)
+            .order("received_at", { ascending: false })
+            .limit(5);
+          if (eventRows?.length) {
+            parts.push(
+              `Recent real GitHub activity on the linked repo: ${eventRows.map((e) => `[${e.event_type}] ${e.summary}`).join("; ")}`
+            );
+          }
+        }
       } else {
         parts.push("Learner has not yet linked a portfolio project to this course.");
       }

@@ -47,7 +47,10 @@ export type AITask =
   | "portfolio_generation"
   | "monetisation_planning"
   | "daily_mission_framing"
-  | "concept_rescue";
+  | "concept_rescue"
+  | "idea_plan_generation"
+  | "code_explanation"
+  | "debug_assistance";
 
 interface TaskConfig {
   maxOutputTokens: number;
@@ -175,6 +178,27 @@ const TASK_CONFIG: Record<AITask, TaskConfig> = {
   concept_rescue: {
     maxOutputTokens: envInt("AI_BUDGET_RESCUE_TOKENS", 1100),
     temperature: 0.4,
+    timeoutMs: envInt("AI_TIMEOUT_MS_HIGH", 30_000),
+    maxRetries: 2,
+    cacheTtlMs: 0,
+  },
+  idea_plan_generation: {
+    maxOutputTokens: envInt("AI_BUDGET_IDEA_PLAN_TOKENS", 2200),
+    temperature: 0.5,
+    timeoutMs: envInt("AI_TIMEOUT_MS_CRITICAL", 40_000),
+    maxRetries: 3,
+    cacheTtlMs: 0,
+  },
+  code_explanation: {
+    maxOutputTokens: envInt("AI_BUDGET_CODE_EXPLAIN_TOKENS", 1400),
+    temperature: 0.3,
+    timeoutMs: envInt("AI_TIMEOUT_MS_HIGH", 30_000),
+    maxRetries: 2,
+    cacheTtlMs: 0,
+  },
+  debug_assistance: {
+    maxOutputTokens: envInt("AI_BUDGET_DEBUG_TOKENS", 1200),
+    temperature: 0.3,
     timeoutMs: envInt("AI_TIMEOUT_MS_HIGH", 30_000),
     maxRetries: 2,
     cacheTtlMs: 0,

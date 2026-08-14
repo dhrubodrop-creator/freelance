@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ExternalLink, Plus, Wrench } from "lucide-react";
+import { ExternalLink, Lightbulb, Plus, Wrench } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/current-user";
 import { supabaseAdmin } from "@/lib/supabase/server";
@@ -10,8 +11,13 @@ import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { PortfolioFormDialog } from "@/components/profile/portfolio-form-dialog";
 import { ProjectDecisions } from "@/components/profile/project-decisions";
+import { ProjectCheckpoints } from "@/components/profile/project-checkpoints";
 import { PortfolioCaseStudy } from "@/components/profile/portfolio-case-study";
 import { CapstoneCard } from "@/components/profile/capstone-card";
+import { GitHubConnectionCard } from "@/components/profile/github-connection-card";
+import { GitHubRepoLink } from "@/components/profile/github-repo-link";
+import { CodeCoachPanel } from "@/components/profile/code-coach-panel";
+import { getGitHubConnectionSummary } from "@/lib/github";
 import type {
   CapstoneReviewRow,
   CapstoneSubmissionRow,
@@ -19,6 +25,7 @@ import type {
   CourseRow,
   PortfolioCaseStudyRow,
   PortfolioItemRow,
+  ProjectCheckpointRow,
   ProjectDecisionRow,
   SkillRow,
 } from "@/types/db";
@@ -52,8 +59,9 @@ export default async function PortfolioPage() {
 
   const decisionsByItem = new Map<string, ProjectDecisionRow[]>();
   const caseStudyByItem = new Map<string, PortfolioCaseStudyRow>();
+  const checkpointsByItem = new Map<string, ProjectCheckpointRow[]>();
   if (portfolioItems.length > 0) {
-    const [{ data: decisionRows }, { data: caseStudyRows }] = await Promise.all([
+    const [{ data: decisionRows }, { data: caseStudyRows }, { data: checkpointRows }] = await Promise.all([
       supabase
         .from("project_decisions")
         .select("*")
@@ -63,6 +71,11 @@ export default async function PortfolioPage() {
         .from("portfolio_case_studies")
         .select("*")
         .in("portfolio_item_id", portfolioItems.map((i) => i.id)),
+      supabase
+        .from("project_checkpoints")
+        .select("*")
+        .in("portfolio_item_id", portfolioItems.map((i) => i.id))
+        .order("created_at", { ascending: false }),
     ]);
     for (const d of (decisionRows ?? []) as ProjectDecisionRow[]) {
       const list = decisionsByItem.get(d.portfolio_item_id) ?? [];
@@ -72,7 +85,23 @@ export default async function PortfolioPage() {
     for (const c of (caseStudyRows ?? []) as PortfolioCaseStudyRow[]) {
       caseStudyByItem.set(c.portfolio_item_id, c);
     }
+    for (const cp of (checkpointRows ?? []) as ProjectCheckpointRow[]) {
+      const list = checkpointsByItem.get(cp.portfolio_item_id) ?? [];
+      list.push(cp);
+      checkpointsByItem.set(cp.portfolio_item_id, list);
+    }
   }
+
+  const [githubConnection, { data: repoLinkRows }] = await Promise.all([
+    getGitHubConnectionSummary(user.id),
+    portfolioItems.length > 0
+      ? supabase.from("github_repo_links").select("portfolio_item_id, repo_full_name").in(
+          "portfolio_item_id",
+          portfolioItems.map((i) => i.id)
+        )
+      : Promise.resolve({ data: [] as { portfolio_item_id: string; repo_full_name: string }[] }),
+  ]);
+  const repoByItem = new Map((repoLinkRows ?? []).map((r) => [r.portfolio_item_id, r.repo_full_name]));
 
   const enrolledCourses = ((enrollmentRows ?? []) as unknown as { course_id: string; courses: CourseRow | null }[])
     .map((r) => r.courses)
@@ -135,17 +164,26 @@ export default async function PortfolioPage() {
             Real proof of what you&rsquo;ve built — not &ldquo;I took a course,&rdquo; but &ldquo;I built this.&rdquo;
           </p>
         </div>
-        <PortfolioFormDialog
-          title="Add a project"
-          skills={skills}
-          courses={enrolledCourses}
-          trigger={
-            <Button className="gap-1.5">
-              <Plus className="size-4" /> Add project
-            </Button>
-          }
-        />
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" className="gap-1.5">
+            <Link href="/portfolio/build-from-idea">
+              <Lightbulb className="size-4" /> Build from my idea
+            </Link>
+          </Button>
+          <PortfolioFormDialog
+            title="Add a project"
+            skills={skills}
+            courses={enrolledCourses}
+            trigger={
+              <Button className="gap-1.5">
+                <Plus className="size-4" /> Add project
+              </Button>
+            }
+          />
+        </div>
       </div>
+
+      <GitHubConnectionCard connection={githubConnection} />
 
       {portfolioItems.length === 0 && (
         <Card>
@@ -222,7 +260,10 @@ export default async function PortfolioPage() {
                     ))}
                   </div>
                 )}
+                <GitHubRepoLink portfolioItemId={item.id} repoFullName={repoByItem.get(item.id) ?? null} />
+                <CodeCoachPanel repoFullName={repoByItem.get(item.id) ?? null} />
                 <ProjectDecisions portfolioItemId={item.id} decisions={decisionsByItem.get(item.id) ?? []} />
+                <ProjectCheckpoints portfolioItemId={item.id} checkpoints={checkpointsByItem.get(item.id) ?? []} />
                 <PortfolioCaseStudy portfolioItemId={item.id} caseStudy={caseStudyByItem.get(item.id) ?? null} />
               </CardContent>
             </Card>
