@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { FileText, FolderDown, CheckCircle2, Hammer, Target, Sparkles, Compass, FolderKanban } from "lucide-react";
+import { FileText, FolderDown, CheckCircle2, Hammer, Target, Sparkles, Compass } from "lucide-react";
 
 import { getCurrentUser } from "@/lib/current-user";
 import {
@@ -18,10 +18,12 @@ import { MentorChatWidget } from "@/components/portal/mentor-chat-widget";
 import { PlaybookTab } from "@/components/course/playbook-tab";
 import { ExercisesTab } from "@/components/course/exercises-tab";
 import { InterviewPrepTab } from "@/components/course/interview-prep-tab";
+import { ProjectWorkspaceCard } from "@/components/course/project-workspace-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type {
+  CapstoneSubmissionRow,
   CourseDiagnosticRow,
   ExerciseRow,
   ModulePlaybookSectionRow,
@@ -68,6 +70,8 @@ export default async function ModulePage({
     { data: interviewQuestionsData },
     { data: moduleSkillLinks },
     { data: diagnosticData },
+    { count: portfolioItemCount },
+    { data: capstoneData },
   ] = await Promise.all([
     supabase.from("templates").select("*").eq("module_id", activeModule.id),
     supabase.from("playbooks").select("*").eq("course_id", course.id),
@@ -76,9 +80,22 @@ export default async function ModulePage({
     supabase.from("interview_questions").select("*").eq("module_id", activeModule.id).order("order_index"),
     supabase.from("module_skills").select("skill_id, skills(*)").eq("module_id", activeModule.id),
     supabase.from("course_diagnostics").select("*").eq("user_id", user.id).eq("course_id", course.id).maybeSingle(),
+    supabase.from("portfolio_items").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("course_id", course.id),
+    supabase.from("course_capstones").select("id").eq("course_id", course.id).maybeSingle(),
   ]);
   const diagnostic = diagnosticData as CourseDiagnosticRow | null;
   const activeGuidance = diagnostic?.module_guidance?.[activeModule.id] ?? null;
+  const hasPortfolioProject = (portfolioItemCount ?? 0) > 0;
+  let capstoneStatus: CapstoneSubmissionRow["status"] | null = null;
+  if (capstoneData) {
+    const { data: submission } = await supabase
+      .from("capstone_submissions")
+      .select("status")
+      .eq("user_id", user.id)
+      .eq("capstone_id", capstoneData.id)
+      .maybeSingle();
+    capstoneStatus = submission?.status ?? null;
+  }
   const exercisesForModule = (exercisesData ?? []) as ExerciseRow[];
   const { data: exerciseCompletionRows } =
     exercisesForModule.length > 0
@@ -153,35 +170,15 @@ export default async function ModulePage({
           </CardContent>
         </Card>
       )}
-      {course.track === "AI-Native Development" && (
-        <Card className="border-primary-100 bg-primary-50/30">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <FolderKanban className="size-4 text-primary-700" />
-              Project workspace
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 text-sm sm:grid-cols-2">
-            <div>
-              <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">Current stage</p>
-              <p className="mt-1 font-medium">{activeIndex + 1}. {activeModule.title}</p>
-              <p className="mt-3 text-micro font-semibold uppercase tracking-wide text-muted-foreground">Next task</p>
-              <p className="mt-1">{activeModule.topics[0] ?? "Complete this stage's deliverable."}</p>
-            </div>
-            <div>
-              <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">Completed stages</p>
-              <p className="mt-1 text-muted-foreground">
-                {completedProjectStages.length > 0
-                  ? completedProjectStages.map((module) => module.title).join(" · ")
-                  : "No completed project stages yet."}
-              </p>
-              <Link href="/portfolio" className="mt-3 inline-flex font-semibold text-accent-600 hover:underline">
-                Open deliverables, decisions, portfolio and capstone
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <ProjectWorkspaceCard
+        activeModuleTitle={activeModule.title}
+        activeModuleIndex={activeIndex}
+        nextTaskLabel={activeModule.build_deliverable ?? "Complete this stage's exercises and mark it done."}
+        completedStageTitles={completedProjectStages.map((module) => module.title)}
+        hasPortfolioProject={hasPortfolioProject}
+        capstoneExists={Boolean(capstoneData)}
+        capstoneStatus={capstoneStatus}
+      />
       {embedUrl && (
         <div className="aspect-video w-full overflow-hidden rounded-xl bg-ink-950 shadow-card">
           <iframe
