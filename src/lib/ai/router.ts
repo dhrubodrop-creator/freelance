@@ -60,7 +60,8 @@ export type AITask =
   | "ai_eval_judge"
   | "simulator_turn"
   | "simulator_evaluation"
-  | "architecture_diagram_generation";
+  | "architecture_diagram_generation"
+  | "proposal_generation";
 
 interface TaskConfig {
   maxOutputTokens: number;
@@ -280,6 +281,13 @@ const TASK_CONFIG: Record<AITask, TaskConfig> = {
     maxOutputTokens: envInt("AI_BUDGET_ARCH_DIAGRAM_TOKENS", 1200),
     temperature: 0.2,
     timeoutMs: envInt("AI_TIMEOUT_MS_HIGH", 30_000),
+    maxRetries: 2,
+    cacheTtlMs: 0,
+  },
+  proposal_generation: {
+    maxOutputTokens: envInt("AI_BUDGET_PROPOSAL_TOKENS", 1600),
+    temperature: 0.4,
+    timeoutMs: envInt("AI_TIMEOUT_MS_CRITICAL", 40_000),
     maxRetries: 2,
     cacheTtlMs: 0,
   },

@@ -10,14 +10,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
+import { ProposalGeneratorDialog } from "@/components/portal/proposal-generator-dialog";
 import type { MonetisationActionRow, MonetisationPlanRow } from "@/types/db";
 
 export function MonetisationInsightCard({
   plan,
   actions,
+  portfolioItems,
 }: {
   plan: MonetisationPlanRow | null;
   actions: MonetisationActionRow[];
+  portfolioItems: { id: string; title: string }[];
 }) {
   const router = useRouter();
   const [generating, setGenerating] = React.useState(false);
@@ -154,9 +157,12 @@ export function MonetisationInsightCard({
           </div>
         )}
 
-        <p className="text-micro text-muted-foreground">
-          Illustrative and personalised to your current profile — not a guarantee of income or a job offer.
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-micro text-muted-foreground">
+            Illustrative and personalised to your current profile — not a guarantee of income or a job offer.
+          </p>
+          <ProposalGeneratorDialog portfolioItems={portfolioItems} />
+        </div>
       </CardContent>
     </Card>
   );

@@ -57,15 +57,24 @@ export interface MonetisationPlanResult {
 const SYSTEM_PROMPT = `You are the monetisation-planning engine for Ropes, a platform that helps working
 professionals turn AI/no-code skills into freelance or solo-entrepreneur income.
 
-You will be given a student's profile, the skills they've self-added to their profile, which of those
-(or others) they have real EVIDENCE for (a completed module + a practiced exercise + an actual
-portfolio project — not just a claim), their portfolio project titles, and — if available — the
-skills their recommended course track still expects them to build (their "skill gap").
+You will be given two clearly separated inputs — treat them differently:
+
+1. "userEvidence" — the student's own profile, the skills they've self-added, which of those (or
+   others) they have real EVIDENCE for (a completed module + a practiced exercise + an actual
+   portfolio project — not just a claim), their portfolio project titles, and their skill gap.
+2. "marketSignals" — real, independently-sourced facts about current demand for related skills
+   (each with its own source and confidence). These describe the MARKET, not this specific learner —
+   never blend a market signal into a claim about what the learner has done or can do.
 
 Weight evidence-backed skills higher than self-reported-only skills when reasoning about what a
 learner can credibly offer a client today — a self-rating with no evidence behind it is a weaker
 signal than a skill they've actually shipped a project with. When a suggested path's "skillsPresent"
 includes a skill that has real evidence, say so explicitly (e.g. "with a shipped project to back it up").
+
+When a market signal is genuinely relevant to a suggested path, you may mention it — but phrase it
+as "Market signals currently indicate demand for..." (attributed to the market), never as a claim
+about the learner's own outcome, and never as "you will earn X" or any income/hiring guarantee. If no
+market signal is relevant to a path, don't force one in.
 
 Generate a personalised, honest monetisation plan. Use language like "based on your profile",
 "potential", "suggested" — never promise a specific income or guarantee a job/client. Only recommend
@@ -116,6 +125,12 @@ function fallbackPlan(careerGoal: string | null): MonetisationPlanResult {
   };
 }
 
+export interface MonetisationMarketSignal {
+  signal: string;
+  source: string;
+  confidence: string;
+}
+
 export async function generateMonetisationPlan(input: {
   profile: Pick<ProfileRow, "occupation" | "industry" | "career_goal" | "income_goal_inr" | "work_preference">;
   skillNames: string[];
@@ -123,6 +138,8 @@ export async function generateMonetisationPlan(input: {
   portfolioTitles: string[];
   recommendedTrack: string | null;
   skillGapMissing: string[];
+  /** Post-audit fix: real market_signals rows, pre-filtered by the caller to the learner's own skill categories — never the whole table. */
+  marketSignals?: MonetisationMarketSignal[];
   userId?: string | null;
 }): Promise<MonetisationPlanResult> {
   const result = await callAI({
@@ -134,11 +151,14 @@ export async function generateMonetisationPlan(input: {
         role: "user",
         content: JSON.stringify({
           profile: input.profile,
-          skills: input.skillNames,
-          evidenceBackedSkills: input.verifiedSkillNames,
-          portfolioProjects: input.portfolioTitles,
-          recommendedTrack: input.recommendedTrack,
-          skillGapForRecommendedTrack: input.skillGapMissing,
+          userEvidence: {
+            skills: input.skillNames,
+            evidenceBackedSkills: input.verifiedSkillNames,
+            portfolioProjects: input.portfolioTitles,
+            recommendedTrack: input.recommendedTrack,
+            skillGapForRecommendedTrack: input.skillGapMissing,
+          },
+          marketSignals: input.marketSignals ?? [],
         }),
       },
     ],

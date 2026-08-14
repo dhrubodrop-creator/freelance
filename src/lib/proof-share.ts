@@ -2,7 +2,7 @@ import "server-only";
 import crypto from "crypto";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { computeMasteryForSkills, loadUserMasterySourceData } from "@/lib/mastery";
+import { computeMasteryForSkills, isVerifiedMasteryLevel, loadUserMasterySourceData } from "@/lib/mastery";
 import type { CapstoneReviewRow, CapstoneSubmissionRow, CourseCapstoneRow, SkillRow } from "@/types/db";
 
 /**
@@ -58,7 +58,7 @@ export async function getPublicProofByToken(token: string): Promise<PublicProof 
   const mastery = computeMasteryForSkills(allSkills.map((s) => s.id), masteryData);
   const skillById = new Map(allSkills.map((s) => [s.id, s]));
   const demonstratedSkills = mastery
-    .filter((m) => m.level === "demonstrated" || m.level === "strong")
+    .filter((m) => isVerifiedMasteryLevel(m.level))
     .map((m) => ({ name: skillById.get(m.skillId)?.name ?? "", level: m.level }))
     .filter((s) => s.name);
 

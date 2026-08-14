@@ -46,6 +46,7 @@ export interface VisualQAResult {
   headingOrderIssues: string[];
   emptyBody: boolean;
   note: string;
+  runId?: string;
 }
 
 export async function runVisualQA(input: { userId: string; portfolioItemId: string; targetUrl: string }): Promise<VisualQAResult | { error: string }> {
@@ -77,7 +78,7 @@ export async function runVisualQA(input: { userId: string; portfolioItemId: stri
     note: "Static HTML analysis only — no rendered screenshot or visual-regression diff was taken.",
   };
 
-  await recordVerificationRun({
+  const run = await recordVerificationRun({
     userId: input.userId,
     portfolioItemId: input.portfolioItemId,
     checkType: "visual_qa",
@@ -88,6 +89,7 @@ export async function runVisualQA(input: { userId: string; portfolioItemId: stri
       result.emptyBody ? "Page body is empty." : "",
     ].filter(Boolean),
   });
+  result.runId = run?.id;
 
   return result;
 }
@@ -100,6 +102,7 @@ export interface AccessibilityResult {
   formInputsWithoutLabel: number;
   buttonsWithoutAccessibleName: number;
   note: string;
+  runId?: string;
 }
 
 export async function runAccessibilityAudit(input: { userId: string; portfolioItemId: string; targetUrl: string }): Promise<AccessibilityResult | { error: string }> {
@@ -136,7 +139,7 @@ export async function runAccessibilityAudit(input: { userId: string; portfolioIt
     note: "Automated static checks only (semantic HTML/labels/alt text) — not a full WCAG audit and not a substitute for real screen-reader testing or a contrast check, which needs rendering.",
   };
 
-  await recordVerificationRun({
+  const run = await recordVerificationRun({
     userId: input.userId,
     portfolioItemId: input.portfolioItemId,
     checkType: "accessibility",
@@ -147,6 +150,7 @@ export async function runAccessibilityAudit(input: { userId: string; portfolioIt
       result.formInputsWithoutLabel > 0 ? `${result.formInputsWithoutLabel} form input(s) without an accessible label.` : "",
     ].filter(Boolean),
   });
+  result.runId = run?.id;
 
   return result;
 }
@@ -159,6 +163,7 @@ export interface SecurityResult {
   authRejectsUnauthenticated: boolean | null;
   possibleExposedFiles: string[];
   note: string;
+  runId?: string;
 }
 
 /** Never runs destructive tests — only reads response headers and checks for accidentally-committed .env-like files by name, not content brute-forcing. */
@@ -208,7 +213,7 @@ export async function runSecurityScan(input: {
     note: "Checks response security headers and scans the repo's file list for committed .env-like files by name. This is not a dependency-vulnerability scan (run `npm audit` yourself) or a penetration test.",
   };
 
-  await recordVerificationRun({
+  const run = await recordVerificationRun({
     userId: input.userId,
     portfolioItemId: input.portfolioItemId,
     checkType: "security",
@@ -219,6 +224,7 @@ export async function runSecurityScan(input: {
       headers && !result.hasHsts ? "Missing Strict-Transport-Security header." : "",
     ].filter(Boolean),
   });
+  result.runId = run?.id;
 
   return result;
 }
@@ -229,6 +235,7 @@ export interface PerformanceResult {
   responseSizeBytes: number;
   aiUsage: { totalCalls: number; avgLatencyMs: number; totalOutputTokens: number } | null;
   note: string;
+  runId?: string;
 }
 
 export async function runPerformanceCheck(input: { userId: string; portfolioItemId: string; targetUrl: string }): Promise<PerformanceResult | { error: string }> {
@@ -259,7 +266,7 @@ export async function runPerformanceCheck(input: { userId: string; portfolioItem
     note: "A real, single-request measurement from this server — not a multi-run Lighthouse audit, and network conditions vary. AI usage numbers are your real logged Ropes AI Coach calls, not this specific page.",
   };
 
-  await recordVerificationRun({
+  const run = await recordVerificationRun({
     userId: input.userId,
     portfolioItemId: input.portfolioItemId,
     checkType: "performance",
@@ -267,6 +274,7 @@ export async function runPerformanceCheck(input: { userId: string; portfolioItem
     results: result as unknown as Record<string, unknown>,
     blockers: fetched.latencyMs > 3000 ? [`Response took ${fetched.latencyMs}ms — slow first response.`] : [],
   });
+  result.runId = run?.id;
 
   return result;
 }

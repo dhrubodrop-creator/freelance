@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { generateDefenceQuestions } from "@/lib/capstone";
+import { buildVerificationEvidenceSummary } from "@/lib/capstone-evidence";
 import { logEvent } from "@/lib/analytics";
 import type { CourseCapstoneRow, PortfolioItemRow, ProjectDecisionRow } from "@/types/db";
 
@@ -68,12 +69,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .single();
   if (submissionError) return NextResponse.json({ error: submissionError.message }, { status: 500 });
 
+  const evidenceSummary = await buildVerificationEvidenceSummary(item.id);
+
   const questions = await generateDefenceQuestions({
     capstoneTitle: capstoneRow.title,
     brief: capstoneRow.brief,
     requirements: capstoneRow.requirements,
     item: item as PortfolioItemRow,
     decisions: (decisions ?? []) as ProjectDecisionRow[],
+    evidenceSummary,
     userId: user.id,
   });
 

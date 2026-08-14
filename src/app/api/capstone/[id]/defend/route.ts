@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { generateCapstoneReview } from "@/lib/capstone";
+import { buildVerificationEvidenceSummary, isCapstonePassed } from "@/lib/capstone-evidence";
 import { logEvent } from "@/lib/analytics";
 import { createNotification } from "@/lib/notifications";
 import type { CourseCapstoneRow, PortfolioItemRow, ProjectDecisionRow } from "@/types/db";
@@ -45,6 +46,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .update({ status: "submitted_for_review", updated_at: new Date().toISOString() })
     .eq("id", submission.id);
 
+  const evidenceSummary = await buildVerificationEvidenceSummary(item.id);
+
   const review = await generateCapstoneReview({
     capstoneTitle: capstoneRow.title,
     brief: capstoneRow.brief,
@@ -52,6 +55,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     item: item as PortfolioItemRow,
     decisions: (decisions ?? []) as ProjectDecisionRow[],
     defenceAnswers: parsed.data.answers,
+    evidenceSummary,
     userId: user.id,
   });
 
@@ -85,19 +89,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .eq("id", submission.id);
 
   // Close the learning -> capstone -> demonstrated-skill loop: a capstone
-  // that clears a bare-pass bar (avg dimension score >= 50 — never award
-  // evidence for work that didn't actually demonstrate the skill) auto-tags
-  // its portfolio item with every skill this course teaches, the same
-  // portfolio_item_skills join computeMasteryForSkills already reads. Without
-  // this, a learner would have to manually re-tag skills the capstone
-  // already proved, and Proof Profile / Market Pulse / monetisation would
-  // stay blind to a passed capstone until they did.
-  const dimensionScoreValues = Object.values(review.dimensionScores);
-  const avgScore =
-    dimensionScoreValues.length > 0
-      ? dimensionScoreValues.reduce((sum, s) => sum + s.score, 0) / dimensionScoreValues.length
-      : 0;
-  if (avgScore >= 50) {
+  // that clears the canonical bare-pass bar (see isCapstonePassed() —
+  // never award evidence for work that didn't actually demonstrate the
+  // skill) auto-tags its portfolio item with every skill this course
+  // teaches, the same portfolio_item_skills join computeMasteryForSkills
+  // already reads. Without this, a learner would have to manually re-tag
+  // skills the capstone already proved, and Proof Profile / Market Pulse /
+  // monetisation would stay blind to a passed capstone until they did.
+  const passed = isCapstonePassed(review.dimensionScores);
+  if (passed) {
     const { data: courseModules } = await supabase.from("modules").select("id").eq("course_id", capstoneRow.course_id);
     const moduleIds = (courseModules ?? []).map((m) => m.id);
     if (moduleIds.length > 0) {
@@ -114,7 +114,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
   }
 
-  await logEvent(user.id, "capstone_reviewed", { capstoneId, portfolioItemId: item.id, avgScore });
+  await logEvent(user.id, "capstone_reviewed", { capstoneId, portfolioItemId: item.id, passed });
   await createNotification(
     user.id,
     "capstone_reviewed",

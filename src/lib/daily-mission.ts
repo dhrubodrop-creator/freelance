@@ -19,6 +19,7 @@ const MINUTES_BY_REASON: Record<DailyMissionReason, number> = {
   skill_gap_practice: 20,
   capstone_progress: 60,
   catchup: 30,
+  verification_blocker: 30,
 };
 
 interface MissionTarget {
@@ -66,9 +67,64 @@ async function pickActiveCourse(userId: string): Promise<EnrollmentRow & { cours
   return chosen as EnrollmentRow & { course: { id: string; title: string } };
 }
 
+/**
+ * Post-audit P1 fix: Daily Mission previously never looked at real project
+ * verification state, so it could tell a learner to "study security" while
+ * their actual project had a concrete, already-diagnosed security failure
+ * sitting unresolved. This surfaces the single most recent real blocker —
+ * never fabricated, always the literal text a verification run recorded —
+ * as the highest-priority mission when one exists.
+ */
+async function findVerificationBlockerTarget(userId: string, courseId: string): Promise<MissionTarget | null> {
+  const supabase = supabaseAdmin();
+  const { data: item } = await supabase
+    .from("portfolio_items")
+    .select("id, title")
+    .eq("user_id", userId)
+    .eq("course_id", courseId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!item) return null;
+
+  const { data: runs } = await supabase
+    .from("project_verification_runs")
+    .select("check_type, blockers, created_at")
+    .eq("portfolio_item_id", item.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  const seenTypes = new Set<string>();
+  for (const run of runs ?? []) {
+    // Only the latest run per check_type reflects current state — an older
+    // failure that's since been fixed by a newer passing run must not
+    // resurface as a mission.
+    if (seenTypes.has(run.check_type)) continue;
+    seenTypes.add(run.check_type);
+    if (!Array.isArray(run.blockers) || run.blockers.length === 0) continue;
+
+    const { data: courseRow } = await supabase.from("courses").select("title").eq("id", courseId).maybeSingle();
+
+    return {
+      courseId,
+      moduleId: null,
+      exerciseId: null,
+      objective: `Fix a ${run.check_type.replace(/_/g, " ")} issue in "${item.title}"`,
+      reason: "verification_blocker",
+      acceptanceCriteria: [run.blockers[0], "Re-run the check in your Portfolio and confirm it now passes."],
+      courseTitle: courseRow?.title ?? "",
+      moduleTitle: null,
+    };
+  }
+  return null;
+}
+
 async function findMissionTarget(userId: string): Promise<MissionTarget | null> {
   const enrollment = await pickActiveCourse(userId);
   if (!enrollment) return null;
+
+  const blockerTarget = await findVerificationBlockerTarget(userId, enrollment.course_id);
+  if (blockerTarget) return blockerTarget;
 
   const supabase = supabaseAdmin();
   const { data: modulesData } = await supabase
@@ -181,7 +237,9 @@ async function frameWhyItMatters(target: MissionTarget, userId: string): Promise
       ? `Finishing this exercise is what turns "watched the lesson" into a skill you can actually demonstrate.`
       : target.reason === "capstone_progress"
         ? `Your capstone is the proof-of-work a client or employer will actually look at — this is the step that moves it forward.`
-        : `This module is the next unlock on your path through ${target.courseTitle} — finishing it keeps your progress real, not just started.`;
+        : target.reason === "verification_blocker"
+          ? `This is a real, already-diagnosed issue in your project — fixing it now is faster than letting it compound, and it's blocking your capstone from seeing this project as clean.`
+          : `This module is the next unlock on your path through ${target.courseTitle} — finishing it keeps your progress real, not just started.`;
 
   const result = await callAI({
     task: "daily_mission_framing",

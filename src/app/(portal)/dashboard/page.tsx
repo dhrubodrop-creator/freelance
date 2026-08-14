@@ -66,7 +66,7 @@ export default async function DashboardPage() {
     supabase.from("education").select("id").eq("user_id", user.id).limit(1),
     supabase.from("work_experiences").select("id").eq("user_id", user.id).limit(1),
     supabase.from("user_skills").select("id").eq("user_id", user.id),
-    supabase.from("portfolio_items").select("id").eq("user_id", user.id),
+    supabase.from("portfolio_items").select("id, title").eq("user_id", user.id),
     supabase.from("monetisation_plans").select("*").eq("user_id", user.id).maybeSingle(),
   ]);
 
@@ -151,7 +151,7 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      <MonetisationInsightCard plan={plan} actions={actions} />
+      <MonetisationInsightCard plan={plan} actions={actions} portfolioItems={portfolioRows ?? []} />
 
       {recommendedCourse && !enrolledCourseIds.has(recommendedCourse.id) && (
         <Card className="border-accent/40 bg-gradient-to-br from-accent-50 to-background">

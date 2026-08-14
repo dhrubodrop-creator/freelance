@@ -23,6 +23,18 @@ export function computeSkillMasteryLevel(evidence: {
   return "not_started";
 }
 
+/**
+ * Post-audit consistency-sweep fix: "is this skill VERIFIED" (demonstrated
+ * or strong — i.e. backed by a real portfolio project, not just practice)
+ * was previously re-derived independently in 5 different files. One
+ * canonical definition now — every consumer (proof, opportunities,
+ * monetisation, proof-share, proposals) imports this instead of re-checking
+ * `level === "demonstrated" || level === "strong"` itself.
+ */
+export function isVerifiedMasteryLevel(level: MasteryLevel): boolean {
+  return level === "demonstrated" || level === "strong";
+}
+
 export interface MasterySourceData {
   /** skill_id -> module ids that teach it */
   moduleIdsBySkill: Map<string, string[]>;

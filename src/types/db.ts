@@ -384,7 +384,8 @@ export type DailyMissionReason =
   | "unfinished_exercise"
   | "skill_gap_practice"
   | "catchup"
-  | "capstone_progress";
+  | "capstone_progress"
+  | "verification_blocker";
 
 export interface DailyMissionRow {
   id: string;
@@ -564,6 +565,27 @@ export interface ProofShareTokenRow {
   id: string;
   user_id: string;
   token: string;
+  created_at: string;
+}
+
+export interface ProposalRow {
+  id: string;
+  user_id: string;
+  portfolio_item_id: string | null;
+  opportunity_id: string | null;
+  service_type: string;
+  buyer_type: string;
+  inputs: Record<string, unknown>;
+  problem_statement: string;
+  proposed_solution: string;
+  scope: string;
+  deliverables: string[];
+  timeline: string;
+  assumptions: string[];
+  exclusions: string[];
+  pricing_structure: string | null;
+  next_step_cta: string;
+  approved: boolean;
   created_at: string;
 }
 
@@ -927,6 +949,7 @@ export interface Database {
         Insert: Partial<CelebratedMilestoneRow>;
         Update: Partial<CelebratedMilestoneRow>;
       };
+      proposals: { Row: ProposalRow; Insert: Partial<ProposalRow>; Update: Partial<ProposalRow> };
     };
   };
 }

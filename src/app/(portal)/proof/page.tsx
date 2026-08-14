@@ -3,7 +3,8 @@ import { Award, FolderGit2, GraduationCap, Sparkles, Trophy } from "lucide-react
 
 import { getCurrentUser } from "@/lib/current-user";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { computeMasteryForSkills, loadUserMasterySourceData } from "@/lib/mastery";
+import { computeMasteryForSkills, isVerifiedMasteryLevel, loadUserMasterySourceData } from "@/lib/mastery";
+import { averageDimensionScore, isCapstonePassed } from "@/lib/capstone-evidence";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProofShareLinkCard } from "@/components/profile/proof-share-link-card";
@@ -32,16 +33,34 @@ export default async function ProofProfilePage() {
     supabase.from("capstone_submissions").select("*").eq("user_id", user.id).eq("status", "reviewed"),
   ]);
 
+  // "Projects with evidence" — post-audit fix: a raw portfolio_items row is
+  // NOT evidence on its own (a learner can create one describing anything).
+  // Only count a project once it has at least one real, verified signal:
+  // an approved case study, a passing verification run, or a passed
+  // capstone tied to it.
+  const portfolioItemIds = (portfolioItems ?? []).map((i) => i.id);
+  const { data: passingRunRows } =
+    portfolioItemIds.length > 0
+      ? await supabase
+          .from("project_verification_runs")
+          .select("portfolio_item_id, blockers")
+          .in("portfolio_item_id", portfolioItemIds)
+      : { data: [] };
+  const itemsWithPassingRun = new Set(
+    (passingRunRows ?? []).filter((r) => !r.blockers || r.blockers.length === 0).map((r) => r.portfolio_item_id as string)
+  );
+  const approvedCaseStudyItemIds = new Set((approvedCaseStudies ?? []).map((c) => c.portfolio_item_id));
+
   const { data: shareTokenRow } = await supabase.from("proof_share_tokens").select("token").eq("user_id", user.id).maybeSingle();
 
   const allSkills = (skills ?? []) as SkillRow[];
   const mastery = computeMasteryForSkills(allSkills.map((s) => s.id), masteryData);
   const skillById = new Map(allSkills.map((s) => [s.id, s]));
-  const demonstrated = mastery.filter((m) => m.level === "demonstrated" || m.level === "strong");
+  const demonstrated = mastery.filter((m) => isVerifiedMasteryLevel(m.level));
   const strong = mastery.filter((m) => m.level === "strong");
 
   const reviewedSubmissions = (submissions ?? []) as CapstoneSubmissionRow[];
-  let capstoneDetails: { capstone: CourseCapstoneRow; review: CapstoneReviewRow }[] = [];
+  let capstoneDetails: { capstone: CourseCapstoneRow; review: CapstoneReviewRow; portfolioItemId: string; passed: boolean }[] = [];
   if (reviewedSubmissions.length > 0) {
     const [{ data: capstones }, { data: reviews }] = await Promise.all([
       supabase.from("course_capstones").select("*").in("id", reviewedSubmissions.map((s) => s.capstone_id)),
@@ -53,15 +72,28 @@ export default async function ProofProfilePage() {
       .map((s) => {
         const capstone = capstoneById.get(s.capstone_id);
         const review = reviewBySubmission.get(s.id);
-        return capstone && review ? { capstone, review } : null;
+        if (!capstone || !review) return null;
+        return { capstone, review, portfolioItemId: s.portfolio_item_id, passed: isCapstonePassed(review.dimension_scores) };
       })
-      .filter((x): x is { capstone: CourseCapstoneRow; review: CapstoneReviewRow } => Boolean(x));
+      .filter((x): x is { capstone: CourseCapstoneRow; review: CapstoneReviewRow; portfolioItemId: string; passed: boolean } =>
+        Boolean(x)
+      );
   }
+  // "Capstones passed" — post-audit fix: only count submissions that actually
+  // cleared the canonical passing bar (isCapstonePassed), not every reviewed
+  // submission regardless of score.
+  const passedCapstones = capstoneDetails.filter((c) => c.passed);
+  const passedCapstoneItemIds = new Set(passedCapstones.map((c) => c.portfolioItemId));
+
+  const itemsWithEvidence = new Set(
+    Array.from(itemsWithPassingRun).concat(Array.from(approvedCaseStudyItemIds), Array.from(passedCapstoneItemIds))
+  );
+  const projectsWithEvidenceCount = (portfolioItems ?? []).filter((i) => itemsWithEvidence.has(i.id)).length;
 
   const stats = [
     { label: "Skills demonstrated", value: demonstrated.length, icon: Sparkles },
-    { label: "Projects completed", value: portfolioItems?.length ?? 0, icon: FolderGit2 },
-    { label: "Capstones passed", value: capstoneDetails.length, icon: GraduationCap },
+    { label: "Projects with evidence", value: projectsWithEvidenceCount, icon: FolderGit2 },
+    { label: "Capstones passed", value: passedCapstones.length, icon: GraduationCap },
     { label: "Portfolio artifacts", value: (approvedCaseStudies ?? []).length, icon: Award },
   ];
 
@@ -120,19 +152,21 @@ export default async function ProofProfilePage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Capstones</CardTitle>
-            <CardDescription>AI-defended and scored, not just submitted.</CardDescription>
+            <CardDescription>
+              AI-defended and scored, not just submitted — only a score of {Math.round(50)}/100 or higher counts as
+              &ldquo;passed&rdquo; and awards skill evidence.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            {capstoneDetails.map(({ capstone, review }) => {
-              const scores = Object.values(review.dimension_scores);
-              const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b.score, 0) / scores.length) : null;
+            {capstoneDetails.map(({ capstone, review, passed }) => {
+              const avg = Math.round(averageDimensionScore(review.dimension_scores));
               return (
                 <div key={capstone.id} className="flex items-center justify-between gap-3 rounded-lg border border-border px-3.5 py-2.5">
                   <div className="flex items-center gap-2">
                     <Trophy className="size-4 text-accent-600" />
                     <span className="text-sm font-medium">{capstone.title}</span>
                   </div>
-                  {avg !== null && <Badge variant="accent">{avg}/100 avg</Badge>}
+                  <Badge variant={passed ? "accent" : "outline"}>{avg}/100 avg — {passed ? "passed" : "not passed"}</Badge>
                 </div>
               );
             })}

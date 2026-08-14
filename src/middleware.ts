@@ -54,6 +54,8 @@ const isProtectedRoute = createRouteMatcher([
   "/simulations(.*)",
   "/api/proof(.*)",
   "/growth(.*)",
+  "/api/proposals(.*)",
+  "/api/verification(.*)",
 ]);
 const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
 

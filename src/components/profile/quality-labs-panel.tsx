@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Accessibility, Gauge, Loader2, ShieldAlert, ScanEye } from "lucide-react";
+import { Accessibility, Gauge, Loader2, RefreshCcw, ShieldAlert, ScanEye } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ function LabDialog({ type, portfolioItemId, repoFullName }: { type: CheckType; p
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [replaying, setReplaying] = useState(false);
 
   async function run() {
     if (type !== "security" && !url.trim()) {
@@ -55,6 +56,22 @@ function LabDialog({ type, portfolioItemId, repoFullName }: { type: CheckType; p
       toast.error(e instanceof Error ? e.message : "Couldn't run that check.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function replay() {
+    if (!result?.runId) return;
+    setReplaying(true);
+    try {
+      const res = await fetch(`/api/verification/${result.runId}/replay`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      toast[data.resolved ? "success" : "info"](data.resolved ? "Fixed — this check now passes." : "Re-checked — still failing.");
+      await run();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't replay that check.");
+    } finally {
+      setReplaying(false);
     }
   }
 
@@ -82,7 +99,7 @@ function LabDialog({ type, portfolioItemId, repoFullName }: { type: CheckType; p
           {result && (
             <div className="flex flex-col gap-2 text-sm">
               {Object.entries(result).map(([key, value]) => {
-                if (key === "note") return null;
+                if (key === "note" || key === "runId") return null;
                 return (
                   <div key={key} className="flex items-start justify-between gap-3 rounded bg-muted/40 px-2.5 py-1.5">
                     <span className="text-muted-foreground">{key}</span>
@@ -96,6 +113,12 @@ function LabDialog({ type, portfolioItemId, repoFullName }: { type: CheckType; p
                 <Badge variant="outline" className="w-fit text-micro">
                   {result.note}
                 </Badge>
+              )}
+              {typeof result.runId === "string" && (
+                <Button size="sm" variant="outline" onClick={replay} disabled={replaying} className="w-fit gap-1.5">
+                  <RefreshCcw className={replaying ? "size-3.5 animate-spin" : "size-3.5"} />
+                  {replaying ? "Replaying…" : "Fixed it? Replay this check"}
+                </Button>
               )}
             </div>
           )}

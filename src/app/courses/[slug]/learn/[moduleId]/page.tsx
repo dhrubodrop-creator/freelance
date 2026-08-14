@@ -15,15 +15,15 @@ import { toYouTubeEmbedUrl } from "@/lib/youtube";
 import { ModuleSidebar } from "@/components/course/module-sidebar";
 import { MarkCompleteButton } from "@/components/course/mark-complete-button";
 import { ConceptRescueButton } from "@/components/course/concept-rescue-button";
-import { ResumeStateTracker } from "@/components/course/resume-state-tracker";
+import { ModuleContentTabs } from "@/components/course/module-content-tabs";
 import { MentorChatWidget } from "@/components/portal/mentor-chat-widget";
 import { PlaybookTab } from "@/components/course/playbook-tab";
 import { ExercisesTab } from "@/components/course/exercises-tab";
 import { InterviewPrepTab } from "@/components/course/interview-prep-tab";
 import { ProjectWorkspaceCard } from "@/components/course/project-workspace-card";
+import { getResumeState } from "@/lib/resume-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import type {
   CapstoneSubmissionRow,
   CourseDiagnosticRow,
@@ -118,6 +118,10 @@ export default async function ModulePage({
     .filter((s): s is SkillRow => Boolean(s));
 
   const hasDeepContent = playbookSections.length > 0 || exercises.length > 0 || interviewQuestions.length > 0;
+  const nextExercise = exercises.find((e) => !completedExerciseIds.has(e.id)) ?? null;
+  const resumeCheckpoint = await getResumeState(user.id, course.id);
+  const initialTab =
+    resumeCheckpoint?.module_id === activeModule.id && resumeCheckpoint.active_tab ? resumeCheckpoint.active_tab : "overview";
   const completedProjectStages = modules
     .slice(0, activeIndex)
     .filter((module) => Boolean(progress.get(module.id)?.completed_at));
@@ -181,6 +185,15 @@ export default async function ModulePage({
         capstoneExists={Boolean(capstoneData)}
         capstoneStatus={capstoneStatus}
       />
+      {/*
+        Post-audit note (resume-state P2 fix): video_position_seconds exists
+        on learner_checkpoints and is honestly left unwritten here — this is
+        a plain YouTube nocookie iframe embed with no player JS attached, so
+        there's no timeupdate event to read from without swapping to the
+        YouTube IFrame Player API (a bigger, separate change). Module/tab/
+        exercise resume state is real; video-timestamp resume is not yet
+        implemented, not faked.
+      */}
       {embedUrl && (
         <div className="aspect-video w-full overflow-hidden rounded-xl bg-ink-950 shadow-card">
           <iframe
@@ -299,7 +312,6 @@ export default async function ModulePage({
 
   return (
     <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-      <ResumeStateTracker courseId={course.id} moduleId={activeModule.id} activeTab="overview" />
       <aside className="lg:sticky lg:top-24 lg:self-start">
         <p className="mb-2 px-3 text-micro font-semibold uppercase tracking-wide text-muted-foreground">
           {course.title}
@@ -322,30 +334,16 @@ export default async function ModulePage({
         </div>
 
         {hasDeepContent ? (
-          <Tabs defaultValue="overview">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              {playbookSections.length > 0 && <TabsTrigger value="playbook">Playbook</TabsTrigger>}
-              {exercises.length > 0 && <TabsTrigger value="practice">Practice</TabsTrigger>}
-              {interviewQuestions.length > 0 && <TabsTrigger value="interview">Interview Prep</TabsTrigger>}
-            </TabsList>
-            <TabsContent value="overview">{overviewContent}</TabsContent>
-            {playbookSections.length > 0 && (
-              <TabsContent value="playbook">
-                <PlaybookTab sections={playbookSections} />
-              </TabsContent>
-            )}
-            {exercises.length > 0 && (
-              <TabsContent value="practice">
-                <ExercisesTab exercises={exercises} completedIds={completedExerciseIds} />
-              </TabsContent>
-            )}
-            {interviewQuestions.length > 0 && (
-              <TabsContent value="interview">
-                <InterviewPrepTab questions={interviewQuestions} />
-              </TabsContent>
-            )}
-          </Tabs>
+          <ModuleContentTabs
+            courseId={course.id}
+            moduleId={activeModule.id}
+            initialTab={initialTab}
+            nextExerciseId={nextExercise?.id ?? null}
+            overview={overviewContent}
+            playbook={playbookSections.length > 0 ? <PlaybookTab sections={playbookSections} /> : null}
+            practice={exercises.length > 0 ? <ExercisesTab exercises={exercises} completedIds={completedExerciseIds} /> : null}
+            interview={interviewQuestions.length > 0 ? <InterviewPrepTab questions={interviewQuestions} /> : null}
+          />
         ) : (
           overviewContent
         )}

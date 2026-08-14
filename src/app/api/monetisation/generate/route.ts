@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { computeProfileCompletion } from "@/lib/profile-completion";
 import { computeSkillGap } from "@/lib/skill-gap";
-import { computeMasteryForSkills, loadUserMasterySourceData } from "@/lib/mastery";
+import { computeMasteryForSkills, isVerifiedMasteryLevel, loadUserMasterySourceData } from "@/lib/mastery";
 import { computeReadinessScore, generateMonetisationPlan } from "@/lib/monetisation";
 import { logEvent } from "@/lib/analytics";
 import { createNotification } from "@/lib/notifications";
@@ -45,14 +45,12 @@ export async function POST() {
   const skillNames = userSkills.map((us) => us.skills?.name).filter((n): n is string => Boolean(n));
   const userSkillIds = new Set(userSkills.map((us) => us.skill_id));
 
-  const { data: allSkillRows } = await supabase.from("skills").select("id, name");
+  const { data: allSkillRows } = await supabase.from("skills").select("id, name, category_id");
   const masteryData = await loadUserMasterySourceData(user.id);
   const mastery = computeMasteryForSkills((allSkillRows ?? []).map((s) => s.id), masteryData);
-  const skillNameById = new Map(((allSkillRows ?? []) as { id: string; name: string }[]).map((s) => [s.id, s.name]));
-  const verifiedSkillNames = mastery
-    .filter((m) => m.level === "demonstrated" || m.level === "strong")
-    .map((m) => skillNameById.get(m.skillId))
-    .filter((n): n is string => Boolean(n));
+  const skillById = new Map(((allSkillRows ?? []) as { id: string; name: string; category_id: string }[]).map((s) => [s.id, s]));
+  const verifiedSkillIds = mastery.filter((m) => isVerifiedMasteryLevel(m.level)).map((m) => m.skillId);
+  const verifiedSkillNames = verifiedSkillIds.map((id) => skillById.get(id)?.name).filter((n): n is string => Boolean(n));
   const portfolioTitles = (portfolioRows ?? []).map((p) => p.title as string);
   const recommendedTrack =
     ((recommendationRow as unknown as { course: CourseRow | null } | null)?.course?.track) ?? null;
@@ -70,6 +68,28 @@ export async function POST() {
       skillGapMissing = gap.missing.map((s) => s.name);
     }
   }
+
+  // Post-audit fix: Market Pulse previously fed nothing downstream. Pull a
+  // small, relevant slice of real market_signals — scoped to the categories
+  // of the learner's VERIFIED skills, falling back to self-reported skill
+  // categories only when no verified skills exist yet — rather than every
+  // signal in the table, per the audit's explicit "must NOT receive every
+  // market signal" requirement.
+  const verifiedCategoryIds = Array.from(new Set(verifiedSkillIds.map((id) => skillById.get(id)?.category_id).filter((c): c is string => Boolean(c))));
+  const selfReportedCategoryIds = Array.from(
+    new Set(userSkills.map((us) => us.skills?.category_id).filter((c): c is string => Boolean(c)))
+  );
+  const relevantCategoryIds = verifiedCategoryIds.length > 0 ? verifiedCategoryIds : selfReportedCategoryIds;
+  const { data: marketSignalRows } =
+    relevantCategoryIds.length > 0
+      ? await supabase
+          .from("market_signals")
+          .select("signal, source, confidence, category_id")
+          .in("category_id", relevantCategoryIds)
+          .order("observed_at", { ascending: false })
+          .limit(5)
+      : { data: [] };
+  const marketSignals = (marketSignalRows ?? []).map((s) => ({ signal: s.signal, source: s.source, confidence: s.confidence }));
 
   const completion = computeProfileCompletion(profile, (educationRows?.length ?? 0) > 0, (experienceRows?.length ?? 0) > 0);
   const readiness = computeReadinessScore({
@@ -94,6 +114,7 @@ export async function POST() {
     portfolioTitles,
     recommendedTrack,
     skillGapMissing,
+    marketSignals,
     userId: user.id,
   });
 
