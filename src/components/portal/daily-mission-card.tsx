@@ -117,7 +117,7 @@ export function DailyMissionCard({
             {courseSlug && (
               <Button
                 asChild
-                variant="accent"
+                variant="outline"
                 size="sm"
                 onClick={() => mission.status === "pending" && updateStatus("in_progress")}
               >

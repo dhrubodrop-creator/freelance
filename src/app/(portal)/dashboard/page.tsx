@@ -140,7 +140,14 @@ export default async function DashboardPage({
           <span className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">
             Readiness
           </span>
-          <span className="font-heading text-xl font-bold">{plan ? plan.readiness_score : "—"}</span>
+          {plan ? (
+            <span className="font-heading text-xl font-bold">{plan.readiness_score}</span>
+          ) : (
+            <>
+              <span className="font-heading text-xl font-bold text-muted-foreground">Not yet</span>
+              <span className="text-micro text-muted-foreground">Generate a plan below to unlock this</span>
+            </>
+          )}
         </div>
       </div>
 
@@ -191,7 +198,8 @@ export default async function DashboardPage({
             <CardDescription>{recommendation?.rationale}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap items-center gap-3">
-            <Button asChild variant="accent">
+            {/* Outline, not accent — NextBestMoveCard above owns the one dominant CTA on this page. */}
+            <Button asChild variant="outline">
               <Link href={`/courses/${recommendedCourse.slug}`}>
                 View this track <ArrowRight className="size-4" />
               </Link>

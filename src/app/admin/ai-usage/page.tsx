@@ -2,7 +2,21 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { AITask } from "@/lib/ai/router";
+import { getProviderHealth, type AITask, type ProviderHealthStatus } from "@/lib/ai/router";
+
+const HEALTH_VARIANT: Record<ProviderHealthStatus, "success" | "outline" | "accent" | "destructive"> = {
+  healthy: "success",
+  busy: "outline",
+  degraded: "accent",
+  unavailable: "destructive",
+};
+
+const HEALTH_LABEL: Record<ProviderHealthStatus, string> = {
+  healthy: "Healthy",
+  busy: "Busy — at concurrency limit",
+  degraded: "Degraded — elevated failure rate",
+  unavailable: "Unavailable — circuit breaker open",
+};
 
 interface AIUsageLogRow {
   id: string;
@@ -28,6 +42,10 @@ const ESTIMATED_USD_PER_1K_OUTPUT_TOKENS = Number(process.env.AI_ESTIMATED_USD_P
 export default async function AdminAIUsagePage() {
   const supabase = supabaseAdmin();
   const since = new Date(Date.now() - 7 * 24 * 60 * 60_000).toISOString();
+  // Inferred purely from real outcomes already recorded by this process's own calls — never
+  // pings Cerebras. Per-instance/in-memory (no shared store in this stack), so this reflects
+  // whichever serverless instance rendered this request, not a true fleet-wide state.
+  const health = getProviderHealth();
 
   const [{ data: recentLogs }, { data: weekLogs }] = await Promise.all([
     supabase.from("ai_usage_logs").select("*").order("created_at", { ascending: false }).limit(100),
@@ -73,6 +91,20 @@ export default async function AdminAIUsagePage() {
           how we know whether the free/low-cost AI strategy is actually sustainable.
         </p>
       </div>
+
+      <Card>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+          <div className="flex items-center gap-2.5">
+            <span className="text-sm font-medium">Provider health (this instance)</span>
+            <Badge variant={HEALTH_VARIANT[health.status]}>{HEALTH_LABEL[health.status]}</Badge>
+          </div>
+          <p className="text-micro text-muted-foreground">
+            {health.consecutiveFailures} consecutive failure(s)
+            {health.recentFailureRate !== null && ` · ${Math.round(health.recentFailureRate * 100)}% failure rate (5m)`}
+            {health.circuitOpen && " · circuit breaker is open, requests are failing fast without calling the provider"}
+          </p>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {stats.map((s) => (

@@ -78,7 +78,10 @@ export function MonetisationInsightCard({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="accent" onClick={generate} disabled={generating} className="gap-1.5">
+          {/* One-primary-action dashboard hierarchy: NextBestMoveCard owns the single accent CTA on
+              /dashboard — every other card's own action stays visually secondary (outline), same
+              logic, lower visual weight, so nothing competes with "Do this now". */}
+          <Button variant="outline" onClick={generate} disabled={generating} className="gap-1.5">
             <Sparkles className="size-4" />
             {generating ? "Generating…" : "Generate my plan"}
           </Button>

@@ -87,16 +87,43 @@ AI/no-code systems and go independent as freelancers. Answer using the provided 
 concise, concrete, and encouraging without hype. If the context doesn't cover the question, say so plainly and suggest the
 student use the "Request human help" option rather than guessing.`;
 
+/**
+ * Progressive AI assistance — a separate dimension from CoachMode above (mode is "what job
+ * this turn does"; level is "how much to reveal"), so they compose instead of duplicating each
+ * other. Defaults to level 1 everywhere a level isn't explicitly passed — the learner has to
+ * ask for more, the AI never leads with the full answer. This also saves real tokens: a level-1
+ * reply is a short nudge, not an essay, by construction of the instruction itself.
+ */
+export type AssistanceLevel = 1 | 2 | 3 | 4 | 5;
+
+export const ASSISTANCE_LEVEL_LABEL: Record<AssistanceLevel, string> = {
+  1: "Small hint",
+  2: "Guided explanation",
+  3: "Worked example",
+  4: "Detailed solution",
+  5: "Full solution",
+};
+
+const ASSISTANCE_LEVEL_INSTRUCTION: Record<AssistanceLevel, string> = {
+  1: "Assistance level 1 of 5 (small hint): give ONLY a brief nudge or a clarifying question. Do not explain the underlying concept in full and do not reveal the answer.",
+  2: "Assistance level 2 of 5 (guided explanation): explain the relevant concept and why it matters, but do not give their exact fix or a full solution — they still have to apply it themselves.",
+  3: "Assistance level 3 of 5 (worked example): walk through a similar worked example (not their exact case) so they can see the pattern, then let them adapt it themselves.",
+  4: "Assistance level 4 of 5 (detailed solution): give a specific, detailed solution outline for their actual situation — precise steps, but leave the final implementation to them.",
+  5: "Assistance level 5 of 5 (full solution): the learner explicitly asked for the complete answer after already trying lower levels — give it in full, clearly, with no more withholding.",
+};
+
 export async function answerMentorQuestion(params: {
   userId: string;
   courseId: string | null;
   moduleId?: string | null;
   message: string;
   mode?: CoachMode;
+  level?: AssistanceLevel;
   careerGoal?: string | null;
-}): Promise<string> {
+}): Promise<{ content: string; ok: boolean }> {
   const supabase = supabaseAdmin();
   const mode = params.mode ?? "explain";
+  const level = params.level ?? 1;
 
   let context = "";
   if (params.courseId) {
@@ -222,7 +249,7 @@ export async function answerMentorQuestion(params: {
     .limit(10);
   const history = ((historyData ?? []) as MentorMessageRow[]).reverse();
 
-  const systemContent = [BASE_SYSTEM_PROMPT, MODE_INSTRUCTION[mode]].join("\n\n");
+  const systemContent = [BASE_SYSTEM_PROMPT, MODE_INSTRUCTION[mode], ASSISTANCE_LEVEL_INSTRUCTION[level]].join("\n\n");
   const contextMessages: { role: "system" | "user" | "assistant"; content: string }[] = [
     { role: "system", content: systemContent },
   ];
@@ -242,8 +269,13 @@ export async function answerMentorQuestion(params: {
     ],
   });
 
-  return (
-    result?.content ??
-    "I'm having trouble reaching the mentor engine right now. Try again in a moment, or use \"Request human help\" below."
-  );
+  if (result) return { content: result.content, ok: true as const };
+
+  // Graceful-degradation pass — never a raw provider/error message as the primary
+  // experience, and never silently fabricated content either. The caller (the API
+  // route) uses `ok: false` to skip persisting this notice as a real chat message.
+  return {
+    content: "Ropes is temporarily busy. You can keep building — your progress is safe. Try again in a moment, or use \"Request human help\" below.",
+    ok: false as const,
+  };
 }

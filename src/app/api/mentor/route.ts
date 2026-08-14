@@ -12,6 +12,7 @@ const bodySchema = z.object({
   mode: z
     .enum(["explain", "hint", "socratic", "debug", "review", "challenge", "interview", "career", "next_step"])
     .optional(),
+  level: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]).optional(),
 });
 
 export async function POST(req: Request) {
@@ -72,17 +73,23 @@ export async function POST(req: Request) {
     moduleId,
     message: parsed.data.message,
     mode: parsed.data.mode,
+    level: parsed.data.level,
     careerGoal: profile?.career_goal ?? null,
   });
 
-  await supabase.from("mentor_messages").insert({
-    user_id: user.id,
-    course_id: courseId,
-    role: "assistant",
-    content: reply,
-  });
+  // Graceful degradation — a "temporarily busy" notice is never persisted as a real
+  // chat message; the learner's own message above is already saved either way, so
+  // nothing is lost, and retrying doesn't leave duplicate system notices in history.
+  if (reply.ok) {
+    await supabase.from("mentor_messages").insert({
+      user_id: user.id,
+      course_id: courseId,
+      role: "assistant",
+      content: reply.content,
+    });
+  }
 
-  return NextResponse.json({ reply });
+  return NextResponse.json({ reply: reply.content, degraded: !reply.ok });
 }
 
 export async function GET(req: Request) {

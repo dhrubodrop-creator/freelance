@@ -93,11 +93,11 @@ export default async function GrowthPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <StorySection title="Built" items={story.built} />
-          <StorySection title="Failed" items={story.failed} />
-          <StorySection title="Fixed" items={story.fixed} />
-          <StorySection title="Learned" items={story.learned} />
-          <StorySection title="Next" items={story.next} />
+          <StorySection title="Built" items={story.built} emptyHint="No projects shipped this week yet — build something in Portfolio." />
+          <StorySection title="Failed" items={story.failed} emptyHint="No failures logged — that can mean nothing was tried yet, not that everything worked." />
+          <StorySection title="Fixed" items={story.fixed} emptyHint="Nothing fixed yet this week." />
+          <StorySection title="Learned" items={story.learned} emptyHint="Complete a module or exercise to fill this in." />
+          <StorySection title="Next" items={story.next} emptyHint="Check Next Best Move above for what to do next." />
         </CardContent>
       </Card>
 
@@ -168,12 +168,12 @@ export default async function GrowthPage() {
   );
 }
 
-function StorySection({ title, items }: { title: string; items: string[] }) {
+function StorySection({ title, items, emptyHint }: { title: string; items: string[]; emptyHint: string }) {
   return (
     <div>
       <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">{title}</p>
       {items.length === 0 ? (
-        <p className="mt-1 text-micro text-muted-foreground">Nothing this week.</p>
+        <p className="mt-1 text-micro text-muted-foreground">{emptyHint}</p>
       ) : (
         <ul className="mt-1 list-disc pl-4 text-sm">
           {items.map((item, i) => (

@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PlainTerm } from "@/components/shared/plain-term";
 
 export function GitHubConnectionCard({
   connection,
@@ -46,6 +47,7 @@ export function GitHubConnectionCard({
         <CardTitle className="flex items-center gap-2 text-base">
           <FolderGit2 className="size-4" /> GitHub
         </CardTitle>
+        <CardDescription>Where your project code is safely stored.</CardDescription>
       </CardHeader>
       <CardContent className="flex items-center justify-between gap-3 text-sm">
         {connection ? (
@@ -58,12 +60,18 @@ export function GitHubConnectionCard({
             </Button>
           </>
         ) : (
-          <>
-            <span className="text-muted-foreground">Connect GitHub to link real repos to your projects.</span>
-            <Button size="sm" onClick={connect} className="gap-1.5">
-              <FolderGit2 className="size-3.5" /> Connect
-            </Button>
-          </>
+          <div className="flex w-full flex-col gap-2">
+            <p className="text-muted-foreground">
+              Not connected yet. Connecting lets Ropes save real code for your projects and check it
+              automatically — you don&rsquo;t need to know how GitHub works to use this.
+            </p>
+            <div className="flex items-center justify-between gap-3">
+              <PlainTerm term="github" className="text-micro" />
+              <Button size="sm" onClick={connect} className="w-fit gap-1.5">
+                <FolderGit2 className="size-3.5" /> Connect GitHub
+              </Button>
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>

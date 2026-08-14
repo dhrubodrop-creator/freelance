@@ -124,19 +124,32 @@ export function ProductionReadinessCard({ portfolioItemId, initialDeploymentUrl 
               )}
 
               {health.nextActions.length > 0 && (
-                <div>
-                  <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">Next actions</p>
-                  <ul className="mt-1 flex flex-col gap-1">
-                    {health.nextActions.map((a, i) => (
-                      <li key={i}>
-                        <Badge variant="outline" className="mr-1.5">
-                          you
-                        </Badge>
-                        {a}
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="mt-1 text-micro text-muted-foreground">
+                <div className="flex flex-col gap-3">
+                  {/* One dominant CTA (Phase 5) — the highest-priority real blocker (weighted, see
+                      production-readiness.ts), not just the first item in dimension order. */}
+                  <div className="rounded-lg border border-accent/40 bg-accent-50 p-3">
+                    <p className="text-micro font-semibold uppercase tracking-wide text-accent-700">Fix the next thing</p>
+                    <p className="mt-1 text-sm">{health.nextActions[0]}</p>
+                  </div>
+
+                  {health.nextActions.length > 1 && (
+                    <div>
+                      <p className="text-micro font-semibold uppercase tracking-wide text-muted-foreground">
+                        After that
+                      </p>
+                      <ul className="mt-1 flex flex-col gap-1">
+                        {health.nextActions.slice(1).map((a, i) => (
+                          <li key={i}>
+                            <Badge variant="outline" className="mr-1.5">
+                              you
+                            </Badge>
+                            {a}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  <p className="text-micro text-muted-foreground">
                     Every action here needs your review/fix — nothing is auto-applied.
                   </p>
                 </div>

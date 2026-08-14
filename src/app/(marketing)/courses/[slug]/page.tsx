@@ -19,6 +19,7 @@ import type { CourseRow, ModuleRow } from "@/types/db";
 import { getCourseDiscovery } from "@/lib/course-discovery";
 import { breadcrumbJsonLd, ORGANIZATION_ID, pageMetadata, safeJsonLd, SITE_URL } from "@/lib/seo";
 import { MarketingBreadcrumbs } from "@/components/marketing/marketing-breadcrumbs";
+import { PlainTerm } from "@/components/shared/plain-term";
 
 export const revalidate = 3600;
 
@@ -240,7 +241,9 @@ export default async function CourseDetailPage({ params }: Props) {
               <Card>
                 <CardContent className="pt-6">
                   <GraduationCap className="mb-3 size-5 text-accent-600" />
-                  <h3 className="font-heading text-base font-semibold">A real capstone, AI-defended</h3>
+                  <h3 className="font-heading text-base font-semibold">
+                    Your <PlainTerm term="capstone" className="inline-flex" />, AI-defended
+                  </h3>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">{capstoneData.title} — submit
                     real work, defend your decisions to an AI interviewer, get scored feedback across
                     multiple dimensions.

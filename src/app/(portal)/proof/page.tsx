@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Award, FolderGit2, GraduationCap, Sparkles, Trophy } from "lucide-react";
 
@@ -91,10 +92,10 @@ export default async function ProofProfilePage() {
   const projectsWithEvidenceCount = (portfolioItems ?? []).filter((i) => itemsWithEvidence.has(i.id)).length;
 
   const stats = [
-    { label: "Skills demonstrated", value: demonstrated.length, icon: Sparkles },
-    { label: "Projects with evidence", value: projectsWithEvidenceCount, icon: FolderGit2 },
-    { label: "Capstones passed", value: passedCapstones.length, icon: GraduationCap },
-    { label: "Portfolio artifacts", value: (approvedCaseStudies ?? []).length, icon: Award },
+    { label: "Skills demonstrated", value: demonstrated.length, icon: Sparkles, zeroHint: "Practice an exercise to start.", href: "/growth" },
+    { label: "Projects with evidence", value: projectsWithEvidenceCount, icon: FolderGit2, zeroHint: "Attach a project to a skill.", href: "/portfolio" },
+    { label: "Capstones passed", value: passedCapstones.length, icon: GraduationCap, zeroHint: "Submit a capstone for review.", href: "/portfolio" },
+    { label: "Portfolio artifacts", value: (approvedCaseStudies ?? []).length, icon: Award, zeroHint: "Generate a case study from a project.", href: "/portfolio" },
   ];
 
   return (
@@ -117,6 +118,11 @@ export default async function ProofProfilePage() {
               <div>
                 <p className="font-heading text-2xl font-bold">{s.value}</p>
                 <p className="text-micro text-muted-foreground">{s.label}</p>
+                {s.value === 0 && (
+                  <Link href={s.href} className="text-micro text-accent-600 hover:underline">
+                    {s.zeroHint}
+                  </Link>
+                )}
               </div>
             </CardContent>
           </Card>

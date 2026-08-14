@@ -63,6 +63,58 @@ export type AITask =
   | "architecture_diagram_generation"
   | "proposal_generation";
 
+/**
+ * AI resource governor — priority tiers. Every task is assigned exactly one
+ * tier below; P3 background/optional generation yields concurrency headroom
+ * to P0 blocking-verification work under load (see PRIORITY_CONCURRENCY_RATIO).
+ *
+ * P0 — active learner blocking action / verification / capstone evaluation
+ * P1 — AI Coach, debugging, concept rescue (interactive, learner waiting live)
+ * P2 — recommendations, portfolio/business prose, optional enhancement generation
+ * P3 — background/non-essential generation
+ */
+export type AIPriority = "P0" | "P1" | "P2" | "P3";
+
+const TASK_PRIORITY: Record<AITask, AIPriority> = {
+  project_review: "P0",
+  capstone_defence_questions: "P0",
+  capstone_scoring: "P0",
+  code_review: "P0",
+  architecture_drift_check: "P0",
+  ai_code_defense: "P0",
+  test_generation: "P0",
+
+  hint_generation: "P1",
+  socratic_questioning: "P1",
+  lesson_explanation: "P1",
+  debug_assistance: "P1",
+  concept_rescue: "P1",
+  code_explanation: "P1",
+  simulator_turn: "P1",
+  simulator_evaluation: "P1",
+  interview_simulation: "P1",
+
+  recommendation: "P2",
+  portfolio_generation: "P2",
+  monetisation_planning: "P2",
+  daily_mission_framing: "P2",
+  idea_plan_generation: "P2",
+  learner_ai_feature_execution: "P2",
+  architecture_diagram_generation: "P2",
+  proposal_generation: "P2",
+
+  content_summarization: "P3",
+  skill_analysis: "P3",
+  quality_lab_summary: "P3",
+  ai_eval_judge: "P3",
+};
+
+/** Share of MAX_CONCURRENT_REQUESTS each tier may use. P0 can use all of it; P3 is capped
+ * to a quarter, so background work can never crowd out an active learner waiting on a
+ * blocking check — without needing a real queue, which this in-memory/single-instance
+ * router doesn't have. */
+const PRIORITY_CONCURRENCY_RATIO: Record<AIPriority, number> = { P0: 1, P1: 0.75, P2: 0.5, P3: 0.25 };
+
 interface TaskConfig {
   maxOutputTokens: number;
   temperature: number;
@@ -299,6 +351,110 @@ let inFlightCount = 0;
 const inFlightRequests = new Map<string, Promise<AIResult>>();
 const responseCache = new Map<string, { value: AIResult; expiresAt: number }>();
 
+function priorityCeiling(priority: AIPriority): number {
+  return Math.max(1, Math.floor(MAX_CONCURRENT_REQUESTS * PRIORITY_CONCURRENCY_RATIO[priority]));
+}
+
+/**
+ * Per-user concurrency limit — one learner spamming a feature (double-clicks,
+ * a broken retry loop client-side) must not be able to eat the whole shared
+ * concurrency budget away from every other learner. In-memory/per-instance,
+ * same caveat as everything else in this router.
+ */
+const MAX_CONCURRENT_PER_USER = envInt("AI_MAX_CONCURRENT_PER_USER", 3);
+const inFlightByUser = new Map<string, number>();
+
+/**
+ * Daily per-user AI budget — this app's own conservative ceiling on a free/
+ * limited provider allowance, not a published Cerebras limit. Resets at UTC
+ * midnight. In-memory/per-instance (approximate on a multi-instance
+ * deployment — a real budget would need a shared store), which is an
+ * acceptable trade for "graceful, not exact" governance at this scale.
+ */
+const DAILY_CALLS_PER_USER = envInt("AI_DAILY_CALLS_PER_USER", 150);
+const dailyUsageByUser = new Map<string, { date: string; count: number }>();
+
+function todayUtc(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function isDailyBudgetExhausted(userId: string): boolean {
+  const entry = dailyUsageByUser.get(userId);
+  const today = todayUtc();
+  if (!entry || entry.date !== today) return false;
+  return entry.count >= DAILY_CALLS_PER_USER;
+}
+
+function recordDailyUsage(userId: string): void {
+  const today = todayUtc();
+  const entry = dailyUsageByUser.get(userId);
+  if (!entry || entry.date !== today) {
+    dailyUsageByUser.set(userId, { date: today, count: 1 });
+  } else {
+    entry.count++;
+  }
+}
+
+/**
+ * Circuit breaker — 200-user reliability pass. Without this, a full Cerebras
+ * outage means every single user's request independently pays the full
+ * retry+backoff+timeout cost (up to ~2 minutes for the heaviest tasks)
+ * before failing. With this, once the provider has failed
+ * AI_CIRCUIT_FAILURE_THRESHOLD times in a row, the circuit opens: every
+ * subsequent call fails FAST (no network call, no retry wait) for
+ * AI_CIRCUIT_COOLDOWN_MS, then lets exactly one request through to probe
+ * recovery (a plain half-open, not a counted trial window — good enough for
+ * this scale). In-memory/per-instance only, same distribution caveat as the
+ * concurrency counter above — there is no shared store (no Redis/Upstash) in
+ * this stack, so this protects one warm instance's worth of traffic, not a
+ * cross-instance global breaker. Concurrency-limit rejections (our own cap,
+ * not a provider failure) never count toward this — only real provider
+ * failures do.
+ */
+const CIRCUIT_FAILURE_THRESHOLD = envInt("AI_CIRCUIT_FAILURE_THRESHOLD", 5);
+const CIRCUIT_COOLDOWN_MS = envInt("AI_CIRCUIT_COOLDOWN_MS", 30_000);
+const HEALTH_WINDOW_MS = 5 * 60_000;
+
+let consecutiveFailures = 0;
+let circuitOpenedAt: number | null = null;
+/** Bounded rolling log of recent outcomes, used only to compute provider health — not a distributed metric store. */
+const recentOutcomes: { ts: number; ok: boolean }[] = [];
+
+function recordOutcome(ok: boolean): void {
+  recentOutcomes.push({ ts: Date.now(), ok });
+  if (recentOutcomes.length > 500) recentOutcomes.splice(0, recentOutcomes.length - 500);
+}
+
+export type ProviderHealthStatus = "healthy" | "busy" | "degraded" | "unavailable";
+
+export interface ProviderHealth {
+  status: ProviderHealthStatus;
+  consecutiveFailures: number;
+  circuitOpen: boolean;
+  /** Failure rate over the last 5 minutes of calls on this instance, or null if too few calls to judge. */
+  recentFailureRate: number | null;
+}
+
+/**
+ * Inferred purely from real outcomes already recorded by callAI() — never
+ * pings Cerebras itself, per the brief's explicit "do not waste API requests
+ * for health checks" rule.
+ */
+export function getProviderHealth(): ProviderHealth {
+  const now = Date.now();
+  const windowed = recentOutcomes.filter((o) => o.ts >= now - HEALTH_WINDOW_MS);
+  const failures = windowed.filter((o) => !o.ok).length;
+  const recentFailureRate = windowed.length > 0 ? failures / windowed.length : null;
+  const circuitOpen = circuitOpenedAt !== null && now - circuitOpenedAt < CIRCUIT_COOLDOWN_MS;
+
+  let status: ProviderHealthStatus = "healthy";
+  if (circuitOpen) status = "unavailable";
+  else if (inFlightCount >= MAX_CONCURRENT_REQUESTS) status = "busy";
+  else if (recentFailureRate !== null && windowed.length >= 3 && recentFailureRate >= 0.3) status = "degraded";
+
+  return { status, consecutiveFailures, circuitOpen, recentFailureRate };
+}
+
 export interface AIResult {
   content: string;
   model: string;
@@ -311,6 +467,8 @@ interface AICallParams {
   userId?: string | null;
   /** Only set true for genuinely non-personalised, deterministic-enough-to-cache prompts. */
   cacheable?: boolean;
+  /** Rarely needed — overrides the task's default priority tier (see TASK_PRIORITY). */
+  priority?: AIPriority;
 }
 
 function requestCacheKey(params: AICallParams): string {
@@ -455,7 +613,12 @@ export async function callAI(params: AICallParams): Promise<AIResult | null> {
     return existingInFlight;
   }
 
-  if (inFlightCount >= MAX_CONCURRENT_REQUESTS) {
+  const priority = params.priority ?? TASK_PRIORITY[params.task];
+
+  if (inFlightCount >= priorityCeiling(priority)) {
+    // Priority-tiered ceiling, not a flat cap — a P3 (background) request can be rejected
+    // here well before global capacity (MAX_CONCURRENT_REQUESTS) is actually exhausted, so
+    // P0 blocking-verification work always has headroom. See PRIORITY_CONCURRENCY_RATIO.
     await logUsage({
       userId: params.userId ?? null,
       provider: "cerebras",
@@ -465,7 +628,64 @@ export async function callAI(params: AICallParams): Promise<AIResult | null> {
       outputTokens: null,
       latencyMs: 0,
       success: false,
-      errorMessage: "Concurrency limit reached",
+      errorMessage: `Concurrency limit reached (priority ${priority})`,
+      retryCount: 0,
+      cacheHit: false,
+      deduped: false,
+    });
+    return null;
+  }
+
+  if (params.userId && (inFlightByUser.get(params.userId) ?? 0) >= MAX_CONCURRENT_PER_USER) {
+    await logUsage({
+      userId: params.userId,
+      provider: "cerebras",
+      model: CEREBRAS_MODEL,
+      task: params.task,
+      inputTokens: null,
+      outputTokens: null,
+      latencyMs: 0,
+      success: false,
+      errorMessage: "Per-user concurrency limit reached",
+      retryCount: 0,
+      cacheHit: false,
+      deduped: false,
+    });
+    return null;
+  }
+
+  if (params.userId && isDailyBudgetExhausted(params.userId)) {
+    await logUsage({
+      userId: params.userId,
+      provider: "cerebras",
+      model: CEREBRAS_MODEL,
+      task: params.task,
+      inputTokens: null,
+      outputTokens: null,
+      latencyMs: 0,
+      success: false,
+      errorMessage: "Daily AI budget reached for this user",
+      retryCount: 0,
+      cacheHit: false,
+      deduped: false,
+    });
+    return null;
+  }
+
+  if (circuitOpenedAt !== null && Date.now() - circuitOpenedAt < CIRCUIT_COOLDOWN_MS) {
+    // Circuit open — fail fast, no provider call, no retry wait. This is the whole point:
+    // during a real outage, 200 users' worth of requests must not each independently pay
+    // the full retry+timeout cost.
+    await logUsage({
+      userId: params.userId ?? null,
+      provider: "cerebras",
+      model: CEREBRAS_MODEL,
+      task: params.task,
+      inputTokens: null,
+      outputTokens: null,
+      latencyMs: 0,
+      success: false,
+      errorMessage: "Circuit breaker open — provider failing repeatedly, cooling down",
       retryCount: 0,
       cacheHit: false,
       deduped: false,
@@ -476,8 +696,15 @@ export async function callAI(params: AICallParams): Promise<AIResult | null> {
   const run = (async (): Promise<AIResult> => {
     const startedAt = Date.now();
     inFlightCount++;
+    if (params.userId) {
+      inFlightByUser.set(params.userId, (inFlightByUser.get(params.userId) ?? 0) + 1);
+      recordDailyUsage(params.userId);
+    }
     try {
       const { result, retries, inputTokens, outputTokens } = await executeWithRetry(params, config);
+      consecutiveFailures = 0;
+      circuitOpenedAt = null;
+      recordOutcome(true);
       await logUsage({
         userId: params.userId ?? null,
         provider: result.provider,
@@ -498,6 +725,11 @@ export async function callAI(params: AICallParams): Promise<AIResult | null> {
       return result;
     } finally {
       inFlightCount--;
+      if (params.userId) {
+        const remaining = (inFlightByUser.get(params.userId) ?? 1) - 1;
+        if (remaining <= 0) inFlightByUser.delete(params.userId);
+        else inFlightByUser.set(params.userId, remaining);
+      }
       inFlightRequests.delete(cacheKey);
     }
   })();
@@ -507,6 +739,14 @@ export async function callAI(params: AICallParams): Promise<AIResult | null> {
   try {
     return await run;
   } catch (err) {
+    consecutiveFailures++;
+    recordOutcome(false);
+    if (consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD) {
+      // (Re)open with a fresh cooldown — this also covers a failed half-open probe: without
+      // refreshing the timestamp here, one failed probe after cooldown would let every
+      // subsequent call through immediately instead of waiting out a new cooldown window.
+      circuitOpenedAt = Date.now();
+    }
     await logUsage({
       userId: params.userId ?? null,
       provider: "cerebras",

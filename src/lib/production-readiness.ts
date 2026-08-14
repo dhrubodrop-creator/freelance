@@ -108,8 +108,11 @@ export async function computeProjectHealth(userId: string, portfolioItemId: stri
   const blockers = dimensions.flatMap((d) => d.blockers);
   if (architectureDrift.status === "issues") blockers.push(...architectureDrift.blockers);
 
+  // Sorted by DIMENSION_WEIGHTS descending (not dimension-array order) so nextActions[0] is
+  // genuinely the highest-priority real blocker — this is what "Fix the next thing" points to.
   const nextActions = dimensions
     .filter((d) => d.status !== "pass")
+    .sort((a, b) => (DIMENSION_WEIGHTS[b.dimension] ?? 10) - (DIMENSION_WEIGHTS[a.dimension] ?? 10))
     .map((d) =>
       d.status === "not_checked"
         ? `Run a ${d.dimension.replace(/_/g, " ")} check — no data yet.`
