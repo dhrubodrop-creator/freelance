@@ -21,6 +21,7 @@ import { DefinitionOfDonePanel } from "@/components/profile/definition-of-done-p
 import { QualityLabsPanel } from "@/components/profile/quality-labs-panel";
 import { AiEvaluationStudio } from "@/components/profile/ai-evaluation-studio";
 import { EvidencePanel } from "@/components/profile/evidence-panel";
+import { ProductionReadinessCard } from "@/components/profile/production-readiness-card";
 import { getGitHubConnectionSummary } from "@/lib/github";
 import type {
   CapstoneReviewRow,
@@ -292,6 +293,7 @@ export default async function PortfolioPage() {
                   repoFullName={repoByItem.get(item.id) ?? null}
                   hasArchitecture={Boolean(item.architecture_note)}
                 />
+                <ProductionReadinessCard portfolioItemId={item.id} initialDeploymentUrl={item.deployment_url} />
                 <ProjectDecisions portfolioItemId={item.id} decisions={decisionsByItem.get(item.id) ?? []} />
                 <ProjectCheckpoints portfolioItemId={item.id} checkpoints={checkpointsByItem.get(item.id) ?? []} />
                 <PortfolioCaseStudy portfolioItemId={item.id} caseStudy={caseStudyByItem.get(item.id) ?? null} />

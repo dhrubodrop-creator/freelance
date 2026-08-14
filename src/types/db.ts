@@ -90,6 +90,7 @@ export interface PortfolioItemRow {
   architecture_note: string | null;
   architecture_diagram_mermaid: string | null;
   architecture_diagram_generated_at: string | null;
+  deployment_url: string | null;
   created_at: string;
 }
 
