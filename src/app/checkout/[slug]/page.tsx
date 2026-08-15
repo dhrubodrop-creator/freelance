@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Image from "next/image";
-import { ShieldCheck, Lock, BadgeCheck } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, ShieldCheck, Lock, BadgeCheck } from "lucide-react";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/current-user";
@@ -47,6 +48,12 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
         </div>
         <Card>
           <CardHeader>
+            <Link
+              href={`/courses/${typedCourse.slug}`}
+              className="mb-1 flex w-fit items-center gap-1 text-micro text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="size-3.5" /> Back to course
+            </Link>
             <CardTitle className="text-h4">Confirm your enrollment</CardTitle>
             <CardDescription>You&rsquo;re one step away from full course access.</CardDescription>
           </CardHeader>

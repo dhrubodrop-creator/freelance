@@ -67,8 +67,13 @@ export default async function CoursesPage() {
               return (
                 <Card
                   key={course.id}
-                  className="group flex w-full flex-col overflow-hidden py-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]"
+                  className="group relative flex w-full flex-col overflow-hidden py-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-lifted sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]"
                 >
+                  {/* QA-reported: only the small "View track" button was clickable — the image
+                      and title looked clickable but did nothing. This stretched overlay link
+                      makes the whole card navigate, while the real button on top of it (z-10)
+                      stays independently focusable/clickable for keyboard users. */}
+                  <Link href={`/courses/${course.slug}`} className="absolute inset-0 z-0" aria-label={course.title} tabIndex={-1} />
                   <div className="relative aspect-[16/9] overflow-hidden bg-primary">
                     <Image
                       src={visual.src}
@@ -88,7 +93,7 @@ export default async function CoursesPage() {
                     <CardTitle className="text-h4">{course.title}</CardTitle>
                     <CardDescription className="line-clamp-3">{course.description}</CardDescription>
                   </CardHeader>
-                  <CardContent className="flex flex-col gap-3 pb-6">
+                  <CardContent className="relative z-10 flex flex-col gap-3 pb-6">
                     <PriceTag price={Number(course.price)} slug={course.slug} />
                     <Button asChild variant="outline" size="sm" className="w-fit">
                       <Link href={`/courses/${course.slug}`}>

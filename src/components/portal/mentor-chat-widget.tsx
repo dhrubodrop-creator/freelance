@@ -167,7 +167,10 @@ export function MentorChatWidget({
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-40">
+    // QA-reported: on mobile the bubble sat directly over the embedded YouTube player's own
+    // bottom-right controls/branding. Pushed up and inward on small screens only; desktop
+    // position (bottom-6 right-6) is unchanged.
+    <div className="fixed bottom-20 right-4 z-40 sm:bottom-6 sm:right-6">
       {open && (
         <div className="mb-3 flex h-[28rem] w-[22rem] flex-col overflow-hidden rounded-xl border border-border bg-popover shadow-lifted">
           <div className="flex items-center justify-between border-b border-border bg-primary px-4 py-3 text-primary-foreground">

@@ -34,11 +34,17 @@ function NavLinks({ isAdmin, onNavigate }: { isAdmin: boolean; onNavigate?: () =
     <nav className="flex flex-col gap-1">
       {NAV.map((item) => {
         const active = pathname === item.href;
+        // QA-reported: Support links out to the public /contact page, which has no portal
+        // shell/sidebar — a stuck learner clicking it lost their place with no way back.
+        // Opening in a new tab keeps the authenticated portal tab exactly as they left it.
+        const isExternalSupport = item.href === "/contact";
         return (
           <Link
             key={item.href}
             href={item.href}
             onClick={onNavigate}
+            target={isExternalSupport ? "_blank" : undefined}
+            rel={isExternalSupport ? "noopener noreferrer" : undefined}
             className={cn(
               "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
               active ? "bg-primary-50 text-primary-700" : "text-muted-foreground hover:bg-muted hover:text-foreground"

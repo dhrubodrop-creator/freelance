@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { AuthShell } from "@/components/shared/auth-shell";
 import { clerkAppearance } from "@/lib/clerk-appearance";
+import { clerkLocalization } from "@/lib/clerk-localization";
 import { getCurrentUser } from "@/lib/current-user";
 import type { Metadata } from "next";
 
@@ -13,7 +14,7 @@ export default async function SignInPage() {
   if (user) redirect(user.profile_completed ? "/dashboard" : "/onboarding");
 
   return (
-    <ClerkProvider>
+    <ClerkProvider localization={clerkLocalization}>
       <AuthShell
         eyebrow="Welcome back"
         title="Sign in to Ropes"
