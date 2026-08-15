@@ -8,44 +8,59 @@ export default function RefundPage() {
     <Section>
       <Container className="max-w-3xl">
         <h1 className="font-heading text-h1 font-bold">Refund Policy</h1>
-        <p className="mt-3 text-sm text-muted-foreground">Last updated: 11 August 2026</p>
+        <p className="mt-3 text-sm text-muted-foreground">Last updated: 15 August 2026</p>
 
         <div className="mt-10 flex flex-col gap-10">
           <section className="flex flex-col gap-3">
-            <h2 className="font-heading text-h4 font-semibold">1. Refund window</h2>
+            <h2 className="font-heading text-h4 font-semibold">1. All sales are final</h2>
             <p className="max-w-prose text-muted-foreground">
-              You may request a full refund on a course purchase within 7 days of the original
-              enrollment date, provided the conditions below are met.
+              Course purchases on Ropes are non-refundable. Once your enrollment is confirmed, access to
+              the course is granted immediately and in full, so we do not offer refunds, exchanges, or
+              cancellations for change of mind, lack of time, dissatisfaction with your own progress, or
+              any reason not listed in Section 2 below — regardless of how much of the course you have
+              used.
             </p>
           </section>
 
           <section className="flex flex-col gap-3">
-            <h2 className="font-heading text-h4 font-semibold">2. Conditions</h2>
+            <h2 className="font-heading text-h4 font-semibold">2. Exceptions required by law</h2>
             <p className="max-w-prose text-muted-foreground">
-              Refund requests within the window are granted as long as course progress remains limited —
-              generally, no more than one module completed. Refund requests made after the 7-day window,
-              or after substantial course progress has been made, are evaluated on a case-by-case basis
-              and are not guaranteed.
+              This policy does not limit any right you have under Indian consumer protection law that
+              cannot be waived by agreement. In particular, we will refund a payment where:
+            </p>
+            <ul className="ml-5 list-disc max-w-prose text-muted-foreground">
+              <li>you were charged more than once for the same enrollment (duplicate payment), or charged
+                after a failed or cancelled transaction;</li>
+              <li>payment was received but course access was never granted due to a technical or
+                processing error on our side; or</li>
+              <li>the course, as delivered, is materially different from what was advertised at the time
+                of purchase.</li>
+            </ul>
+            <p className="max-w-prose text-muted-foreground">
+              Outside of these cases, all purchases are final. This section does not create a general
+              cooling-off period or a right to cancel for convenience.
             </p>
           </section>
 
           <section className="flex flex-col gap-3">
             <h2 className="font-heading text-h4 font-semibold">3. How to request a refund</h2>
             <p className="max-w-prose text-muted-foreground">
-              Contact us through our{" "}
+              If you believe your situation falls under Section 2, contact us through our{" "}
               <a href="/contact" className="text-primary underline underline-offset-4">
                 contact page
               </a>{" "}
-              or WhatsApp with your registered email and course name. Approved refunds are processed
-              back to the original payment method via Razorpay, typically within 7–10 business days.
+              with your registered email and course name. Approved refunds are processed back to the
+              original payment method via Razorpay, typically within 7–10 business days.
             </p>
           </section>
 
           <section className="flex flex-col gap-3">
-            <h2 className="font-heading text-h4 font-semibold">4. Non-refundable items</h2>
+            <h2 className="font-heading text-h4 font-semibold">4. 1:1 mentor session and other inclusions</h2>
             <p className="max-w-prose text-muted-foreground">
-              One-on-one mentor sessions that have already taken place, and any billing cycle of a
-              retainer-style subscription that has already been delivered, are not eligible for refund.
+              Each course enrollment includes one 1:1 mentor session and lifetime access to the course
+              content. Once a mentor session has taken place, it is not eligible for refund or
+              replacement. Any billing cycle of a retainer-style subscription that has already been
+              delivered is likewise not eligible for refund.
             </p>
           </section>
         </div>

@@ -61,7 +61,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ slug:
             <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 p-4">
               <div>
                 <p className="font-medium">{typedCourse.title}</p>
-                <p className="text-sm text-muted-foreground">Lifetime access · 1:1 sessions included</p>
+                <p className="text-sm text-muted-foreground">Lifetime access · one 1:1 mentor session included</p>
               </div>
               <PriceTag price={Number(typedCourse.price)} slug={typedCourse.slug} />
             </div>

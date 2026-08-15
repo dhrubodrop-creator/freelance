@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { MessageCircle, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 import { Logo } from "@/components/shared/logo";
 import { Container } from "@/components/shared/container";
-import { LEGAL_LINKS, WHATSAPP_LINK, SITE_TAGLINE } from "@/lib/constants";
+import { LEGAL_LINKS, SITE_TAGLINE } from "@/lib/constants";
 
 const DISCOVER_LINKS = [
   { href: "/ai-freelancing", label: "AI freelancing" },
@@ -27,15 +27,6 @@ export function SiteFooter() {
           <div className="flex flex-col gap-3">
             <Logo dark />
             <p className="max-w-xs text-sm text-primary-foreground/70">{SITE_TAGLINE}</p>
-            <a
-              href={WHATSAPP_LINK}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-2 inline-flex w-fit items-center gap-2 rounded-full border border-white/15 px-3.5 py-1.5 text-sm text-primary-foreground/85 transition-colors hover:border-white/30 hover:text-white"
-            >
-              <MessageCircle className="size-4" />
-              Chat on WhatsApp
-            </a>
           </div>
 
           <div className="flex flex-col gap-3 text-sm">
